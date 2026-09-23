@@ -31,3 +31,44 @@ def test_offsets_symmetric():
         o = arcs.offsets(n, 0.25)
         assert len(set(o)) == n
         assert abs(sum(o)) < 1e-12
+
+
+LAYOUTS = ("grid", "grid_charge_rows")
+
+
+def _layout(name):
+    from gow17net import layouts
+    return layouts.get(name)
+
+
+def test_boxes_do_not_overlap_and_fit():
+    for name in LAYOUTS:
+        lay = _layout(name)
+        w, h = lay.box_w, lay.box_h
+        pos = lay.positions
+        assert set(pos) == set(species.DRAWN), (name, set(species.DRAWN) ^ set(pos))
+        names = list(pos)
+        for i, a in enumerate(names):
+            xa, ya = pos[a]
+            assert lay.xlim[0] + w / 2 <= xa <= lay.xlim[1] - w / 2, (name, a)
+            assert lay.ylim[0] + h / 2 <= ya <= lay.ylim[1] - h / 2, (name, a)
+            for b in names[i + 1:]:
+                xb, yb = pos[b]
+                apart = abs(xa - xb) >= w + 0.1 or abs(ya - yb) >= h + 0.1
+                assert apart, (name, a, b)
+
+
+def test_boxes_stay_put_across_build_steps():
+    from gow17net import render
+    lay = _layout("grid")
+    extents = None
+    for step in (None, 1, 5, 12):
+        fig, boxes = render.draw(lay, step=step)
+        fig.canvas.draw()
+        ext = {k: tuple(round(v, 3) for v in b.get_window_extent().bounds)
+               for k, b in boxes.items()}
+        import matplotlib.pyplot as plt
+        plt.close(fig)
+        if extents is None:
+            extents = ext
+        assert ext == extents, step
