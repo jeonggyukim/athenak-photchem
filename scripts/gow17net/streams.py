@@ -37,8 +37,9 @@ TEX = {"H+": "H$^+$", "H2": "H$_2$", "He+": "He$^+$", "C+": "C$^+$", "CHx": "CH$
        "HCO+": "HCO$^+$", "O+": "O$^+$", "OHx": "OH$_x$", "Si+": "Si$^+$",
        "H2+": "H$_2^+$", "H3+": "H$_3^+$", "e-": "e$^-$"}
 ORDER = ["H", "He", "C", "O", "Si"]
-BAND_H, TRACE_H, GAP = 1.0, 0.45, 0.25
+BAND_H, TRACE_H, GAP = 1.0, 0.8, 0.3
 LOG_RANGE = (-10.0, -3.0)          # log x shown on trace strips
+LOG_TICKS = (-9, -7, -5, -3)
 
 
 def partitions(av, x):
@@ -72,13 +73,26 @@ def draw(ax=None, av=None, x=None, title=True):
             lo, hi = LOG_RANGE
             ax.add_patch(plt.Rectangle((lx[0], y), lx[-1] - lx[0], TRACE_H,
                                        fc="#FBFCFC", ec="#D5D8DC", lw=0.6))
+            for t in LOG_TICKS:
+                yt = y + TRACE_H * (t - lo) / (hi - lo)
+                ax.plot([lx[0], lx[-1]], [yt, yt], color="#EAECEE", lw=0.6, zorder=1)
+                ax.text(lx[-1] + 0.02, yt, f"$10^{{{t}}}$", fontsize=6.5, color="#95A5A6",
+                        va="center", ha="left")
+            placed = []
             for s, c in traces:
                 v = np.clip(np.log10(np.maximum(x[s], 1e-30)), lo, hi)
                 yy = y + TRACE_H * (v - lo) / (hi - lo)
-                ax.plot(lx, yy, color=c, lw=1.6)
+                ax.plot(lx, yy, color=c, lw=1.8, zorder=2)
+                # Label each curve where it is highest, nudged off earlier labels.
                 k = int(np.argmax(yy))
-                ax.text(lx[k], yy[k] + 0.03, TEX.get(s, s), color=c, fontsize=8,
-                        ha="center", va="bottom")
+                k = min(max(k, 4), len(lx) - 5)
+                ly = yy[k] + 0.05
+                for px, py in placed:
+                    if abs(px - lx[k]) < 0.35 and abs(py - ly) < 0.12:
+                        ly = py + 0.13
+                placed.append((lx[k], ly))
+                ax.text(lx[k], ly, TEX.get(s, s), color=c, fontsize=9, ha="center",
+                        va="bottom", weight="bold", zorder=3)
             y += TRACE_H + 0.06
         base = np.full_like(lx, y)
         for s, f, c in parts[elem]:
@@ -94,7 +108,7 @@ def draw(ax=None, av=None, x=None, title=True):
         ax.text(lx[0] - 0.06, y + BAND_H / 2, elem, ha="right", va="center",
                 fontsize=15, weight="bold")
         if traces:
-            ax.text(lx[0] - 0.06, y_tr + TRACE_H / 2, "trace\n(log x)", ha="right",
+            ax.text(lx[0] - 0.06, y_tr + TRACE_H / 2, "trace species\n(log abundance)", ha="right",
                     va="center", fontsize=7, color="#7F8C8D")
         geom[elem] = (y, y + BAND_H, y_tr)
         y += BAND_H + GAP
