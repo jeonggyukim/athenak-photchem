@@ -141,6 +141,7 @@ class BuildNetwork(Scene):
 
         rads = arcs.assign(REACTIONS, overrides=LAYOUT.arc_overrides)
         arrows = {}
+        labels = {}
         for i, (r, rad) in enumerate(zip(REACTIONS, rads)):
             a = box_edge(LAYOUT.positions[r.src], LAYOUT.positions[r.dst],
                          LAYOUT.box_w, LAYOUT.box_h)
@@ -155,6 +156,15 @@ class BuildNetwork(Scene):
             rad_eff = rad * min(1.0, LONG_ARROW / chord) if chord > 0 else rad
             arrows[i] = _make_arrow(TO_FRAME(a), TO_FRAME(b), -4.0 * math.atan(rad_eff),
                                     PROCESS_COLOR[r.process], r.process)
+            # Partner reactant of a two-body reaction, at the label position
+            # the layout chose (fraction t along the drawn arc).
+            if r.partner and r.process in ("chem", "coll", "ncr"):
+                t = LAYOUT.label_overrides.get(i, 0.5)
+                lab = Tex(r"\mathrm{" + r.partner.replace("$", "") + "}")
+                lab.set_color(PROCESS_COLOR[r.process]).set_height(0.14)
+                lab.set_backstroke(BG, 5)
+                lab.move_to(arrows[i][1].point_from_proportion(t))
+                labels[i] = lab
 
         if LAYOUT.name == "slab":
             zones, light = _slab_background()
@@ -185,6 +195,8 @@ class BuildNetwork(Scene):
             for i in shown:
                 body, tip = arrows[i][0]
                 fades += [body.animate.set_stroke(PAST), tip.animate.set_fill(PAST)]
+                if i in labels:
+                    fades.append(labels[i].animate.set_fill(PAST))
             self.play(FadeTransform(title, new_title), FadeOut(caption),
                       *fades, run_time=1.0)
             beats = []
@@ -192,9 +204,13 @@ class BuildNetwork(Scene):
                 (body, tip), path = arrows[i]
                 color = PROCESS_COLOR[REACTIONS[i].process]
                 dot = Dot(radius=0.06).set_fill(color).move_to(path.get_start())
+                extra = []
+                label = labels.get(i)
+                if label is not None:
+                    extra.append(FadeIn(label, run_time=0.3))
                 beats.append(Succession(
                     ShowCreation(body, run_time=0.8),
-                    AnimationGroup(FadeIn(tip, run_time=0.2),
+                    AnimationGroup(FadeIn(tip, run_time=0.2), *extra,
                                    MoveAlongPath(dot, path, run_time=0.6),
                                    Indicate(boxes[REACTIONS[i].dst], scale_factor=1.12,
                                             color=color, run_time=0.6)),
