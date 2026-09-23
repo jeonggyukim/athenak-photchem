@@ -24,16 +24,17 @@ def offsets(n, step):
     """n distinct offsets, symmetric about zero; zero included when n is odd."""
     if n == 1:
         return [0.0]
+    # Even groups skip zero and start at +-step, not +-step/2: the arcs must
+    # clear any box that sits between the pair on a long arrow.
     out = [0.0] if n % 2 else []
     k = 1
     while len(out) < n:
-        mag = step * (k if n % 2 else k - 0.5)
-        out += [mag, -mag]
+        out += [step * k, -step * k]
         k += 1
     return out[:n]
 
 
-def assign(reactions, step=0.25, overrides=None):
+def assign(reactions, step=0.3, overrides=None):
     """rad for every reaction, as a list parallel to `reactions`.
 
     `overrides` maps an index in `reactions` to a rad (in the arrow's own

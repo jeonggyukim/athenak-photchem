@@ -140,3 +140,14 @@ def validate(reactions=REACTIONS):
         assert r.process in PROCESSES, r
         assert r.step in STEPS, r
     return True
+
+
+def index_of(group, number, src=None):
+    """Index in REACTIONS of the arrow for AthenaK reaction (group, number).
+
+    `src` picks between the two arrows of 2-body (6).
+    """
+    hits = [i for i, r in enumerate(REACTIONS)
+            if (group, number) in r.athenak and (src is None or r.src == src)]
+    assert len(hits) == 1, (group, number, src, hits)
+    return hits[0]
