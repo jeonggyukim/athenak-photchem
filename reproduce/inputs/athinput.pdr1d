@@ -1,0 +1,99 @@
+# 1D plane-parallel PDR lit from the inner x1 face, for the gow17net PDR figures.
+# Adapted from Athena++ inputs/chemistry/athinput.pdr_static (Gong+23 sec 4.2.1):
+# n_H = 1e3 cm^-3, chi = 30 (Draine), log-spaced grid to A_V ~ 10, cosmic-ray
+# attenuation on, temperature from thermal balance. Build in the pdr1d worktree:
+#   configure.py --prob=chem_uniform_sixray --chemistry=gow17
+#     --chem_radiation=six_ray --chem_ode_solver=cvode --cvode_path=<sundials>
+#     --cxx=clang++ --cflag=-std=c++14
+
+<comment>
+problem   = 1D PDR, n_H = 1e3, chi = 30
+reference = Section 4.2.1 in Gong et al. 2023, arXiv:2305.04965
+configure = --prob=chem_uniform_sixray --chemistry=gow17 --chem_radiation=six_ray
+            --chem_ode_solver=cvode --cvode_path=$CVODE_PATH
+
+<job>
+problem_id = pdr1d   # problem ID: basename of output filenames
+
+<output1>
+file_type  = vtk       # vtk data dump
+variable   = prim      # variables to be output
+dt         = 100       # time increment between outputs
+
+<time>
+cfl_number = 0.3       # The Courant, Friedrichs, & Lewy (CFL) Number
+# With hydro fixed dt = tlim/nlim. A 100 Myr first step makes CVODE fail at
+# n_H = 1e3, chi = 30; 2 Myr steps converge (relative change < 1e-9 per 100 Myr).
+nlim       = 500       # cycle limit
+tlim       = 1e3       # time limit, ~1 Gyr
+ncycle_out = 1         # interval for stdout summary info
+
+<mesh>
+nx1        = 512       # log-spaced: first cell A_V ~ 1e-3
+x1min      = 0         # minimum value of X1
+x1max      = 6.5       # pc; A_V = 10 at 6.06 pc for n_H = 1e3
+x1rat      = 1.008982  # first cell 6.1e-4 pc (A_V 1e-3), last 5.8e-2 pc
+ix1_bc     = user      # inner-X1 boundary flag
+ox1_bc     = user      # outer-X1 boundary flag
+
+nx2        = 1         # Number of zones in X2-direction
+x2min      = -1        # minimum value of X2
+x2max      = 1         # maximum value of X2
+ix2_bc     = user      # inner-X2 boundary flag
+ox2_bc     = user      # outer-X2 boundary flag
+
+nx3        = 1         # Number of zones in X3-direction
+x3min      = -1        # minimum value of X3
+x3max      = 1         # maximum value of X3
+ix3_bc     = user      # inner-X3 boundary flag
+ox3_bc     = user      # outer-X3 boundary flag
+
+<meshblock>
+nx1        =    512
+nx2        =    1
+nx3        =    1
+
+<hydro>
+gamma = 1.666666666666667 # gamma = C_p/C_v
+iso_sound_speed = 1.0     # isothermal sound speed
+sfloor   =   0            # passive scalar floor
+active   =   fixed        # post-processing
+
+<problem>
+nH         = 1000         # density
+r_init     = 1.0e-6       # initial abundances
+r_init_H2  = 0.4          # initial abundances
+
+<chemistry>
+# chemistry network parameters
+Zdg        = 1.           # metallicity, dust and gas metallicity are the same. default = 1.
+Leff_CO_max = 1.0e18      # max length scale in cm for CO LVG cooling
+is_cr_shielding = true    # CR*min(1, 9.35e20/N_H) per ray
+# chemistry solver parameters
+reltol     = 1.0e-2       # relative tolerance, default 1.0e-2
+abstol     = 1.0e-15      # absolute tolerance, default 1.0e-12
+abstol_H2   = 1.0e-10 
+abstol_E   = 1e-4         # for internal energy. Set to 0.01 K
+user_jac   = false        # flag for whether use user provided Jacobian. default false
+maxsteps   = 100000       # maximum number of steps in one integration. default 10000
+output_zone_sec = true    # output diagnostic
+
+# default parameters
+xHe        = 0.1          # He per H, default = 0.1
+xC         = 1.6e-4       # C atom per H, this is Z=1 value, default 1.6e-4
+xO         = 3.2e-4       # O atom per H, this is Z=1 value, default 3.2e-4
+xS         = 3.5e-6       # S atom per H, this is Z=1 value, default 3.5e-6
+xSi        = 1.7e-6       # Si atom per H, this is Z=1 value, default 1.7e-6
+maxerrtest = 30           # default 7 fails at A_V ~ 8, where O+ ~ 1e-13 is near abstol
+maxorder   = 2            # maximum order. Default 2.
+stldet     = 0            # stability limit detection. Default 0/false.
+
+<chem_radiation>
+G0           = 0.
+G0_inner_x1  = 180.       # 6 x chi: the network averages 6 rays; chi = 30 Draine
+CR           = 2e-16      # Cosmic-ray ionization rate per H
+n_frequency  = 8
+shielding_fraction_cell = 0.5
+# Needs the pdr1d branch of Athena++ (six_ray.cpp): attenuate the CR rate of
+# every ray with the column from the illuminated inner x1 face.
+cr_shielding_column = inner_x1
