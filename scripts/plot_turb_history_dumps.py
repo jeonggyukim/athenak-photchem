@@ -32,7 +32,7 @@ ATHENAK_ROOT = pathlib.Path(
 sys.path.insert(0, str(ATHENAK_ROOT / "vis/python"))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import bin_convert  # noqa: E402
-from compare_ak_ap import read_athenapp_vtk  # noqa: E402
+from compare_ak_ap import SPECIES, read_athenapp_vtk  # noqa: E402
 
 GAMMA = 5.0 / 3.0
 MYR_PER_CODE = 0.97784
@@ -40,18 +40,21 @@ ERG_PER_CODE = 6.882615081124725e31 * 1.0e10  # [mass] (km/s)^2
 XC_TOT = 1.6e-4
 
 
-def integrals(t, dV, rho, v1, v2, v3, press, xH2, xCO):
+def integrals(t, dV, rho, v1, v2, v3, press, species):
     m = rho * dV
     M = m.sum()
-    return {
+    row = {
         "t": t * MYR_PER_CODE,
         "mass": M,
         "KE": 0.5 * np.sum(m * (v1**2 + v2**2 + v3**2)) * ERG_PER_CODE,
         "Eth": np.sum(press) * dV / (GAMMA - 1.0) * ERG_PER_CODE,
         "vrms": np.sqrt(np.sum(m * (v1**2 + v2**2 + v3**2)) / M),
-        "H2": np.sum(m * 2.0 * xH2) / M,
-        "CO": np.sum(m * xCO) / M / XC_TOT,
+        "H2": np.sum(m * 2.0 * species["H2"]) / M,
+        "CO": np.sum(m * species["CO"]) / M / XC_TOT,
     }
+    for name, x in species.items():
+        row["x_" + name] = np.sum(m * x) / M
+    return row
 
 
 def athenak_history(ak_dir, base):
@@ -60,10 +63,11 @@ def athenak_history(ak_dir, base):
         d = bin_convert.read_binary_as_athdf(f)
         dV = np.prod([np.diff(d[k])[0] for k in ("x1f", "x2f", "x3f")])
         g = {k: np.asarray(d[k], dtype=np.float64) for k in
-             ("dens", "velx", "vely", "velz", "eint", "s_06_chem_H2", "s_03_chem_CO")}
+             ("dens", "velx", "vely", "velz", "eint")}
+        species = {name: np.asarray(d[f"s_{i:02d}_chem_{name}"], dtype=np.float64)
+                   for i, name in enumerate(SPECIES)}
         rows.append(integrals(float(d["Time"]), dV, g["dens"], g["velx"], g["vely"],
-                              g["velz"], g["eint"] * (GAMMA - 1.0),
-                              g["s_06_chem_H2"], g["s_03_chem_CO"]))
+                              g["velz"], g["eint"] * (GAMMA - 1.0), species))
     hst = np.loadtxt(glob.glob(f"{ak_dir}/{base}.hydro.hst")[0])
     return rows, hst[:, 0] * MYR_PER_CODE, hst[:, 1]
 
@@ -91,10 +95,12 @@ def athenapp_history(ap_dir, base):
             continue
         t, dx = vtk_time_and_spacing(files[0])
         blocks = [read_athenapp_vtk(f) for f in files]
+        keys = ["rho", "vel1", "vel2", "vel3", "press"] + ["r" + s for s in SPECIES]
         cat = {k: np.concatenate([b[k].ravel() for b in blocks]).astype(np.float64)
-               for k in ("rho", "vel1", "vel2", "vel3", "press", "rH2", "rCO")}
+               for k in keys}
+        species = {name: cat["r" + name] for name in SPECIES}
         rows.append(integrals(t, dx**3, cat["rho"], cat["vel1"], cat["vel2"],
-                              cat["vel3"], cat["press"], cat["rH2"], cat["rCO"]))
+                              cat["vel3"], cat["press"], species))
     t_dt = [(float(m.group(1)), float(m.group(2))) for m in
             re.finditer(r"^cycle=\d+ time=(\S+) dt=(\S+)",
                         pathlib.Path(f"{ap_dir}/run.out").read_text(), re.M)]
@@ -106,21 +112,37 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ak-si-dir", required=True)
     parser.add_argument("--ak-si-base", required=True)
+    parser.add_argument("--ak-si-label", default="AthenaK semi-implicit")
     parser.add_argument("--ap-cvode-dir", required=True)
     parser.add_argument("--ap-cvode-base", required=True)
-    parser.add_argument("--ak-si-table-dir", help="optional semi-implicit, tabulated")
-    parser.add_argument("--ak-si-table-base")
+    parser.add_argument("--ak-extra", nargs=3, action="append", default=[],
+                        metavar=("DIR", "BASE", "LABEL"),
+                        help="another AthenaK run; repeatable")
     parser.add_argument("--ak-bdf-dir")
     parser.add_argument("--ak-bdf-base")
+    parser.add_argument("--tmax", type=float, help="plot only t <= tmax [Myr]")
     parser.add_argument("--out", default="fig_turb_history_dumps.png")
     args = parser.parse_args()
 
-    ak, ak_t, ak_dt = athenak_history(args.ak_si_dir, args.ak_si_base)
-    ap, ap_t, ap_dt = athenapp_history(args.ap_cvode_dir, args.ap_cvode_base)
-    bdf = (athenak_history(args.ak_bdf_dir, args.ak_bdf_base)
-           if args.ak_bdf_dir else None)
-    tab = (athenak_history(args.ak_si_table_dir, args.ak_si_table_base)
-           if args.ak_si_table_dir else None)
+    # Truncating the data, not just the axis, lets the log y-axes rescale to
+    # the plotted interval.
+    def upto(hist):
+        if hist is None or args.tmax is None:
+            return hist
+        rows, t, dt = hist
+        keep = t <= args.tmax
+        return [r for r in rows if r["t"] <= args.tmax], t[keep], dt[keep]
+
+    ak, ak_t, ak_dt = upto(athenak_history(args.ak_si_dir, args.ak_si_base))
+    ap, ap_t, ap_dt = upto(athenapp_history(args.ap_cvode_dir, args.ap_cvode_base))
+    bdf = upto(athenak_history(args.ak_bdf_dir, args.ak_bdf_base)
+               if args.ak_bdf_dir else None)
+    extra_styles = [dict(ls="-.", color="#7A2A06", lw=1.4),
+                    dict(ls=":", color="#6A3D9A", lw=1.8),
+                    dict(ls=(0, (5, 1, 1, 1, 1, 1)), color="#B8860B", lw=1.4)]
+    extras = [(label, upto(athenak_history(d, base)),
+               extra_styles[i % len(extra_styles)])
+              for i, (d, base, label) in enumerate(args.ak_extra)]
     col = lambda rows, k: np.array([r[k] for r in rows])  # noqa: E731
     print(f"AthenaK {len(ak)} dumps to {ak[-1]['t']:.3f} Myr; "
           f"Athena++ {len(ap)} dumps to {ap[-1]['t']:.3f} Myr")
@@ -133,27 +155,29 @@ def main():
         ("CO", r"mass-weighted $x({\rm CO})/x_{\rm C,tot}$", "log"),
         ("dt", r"$\Delta t$ [Myr]", "log"),
     ]
+    def draw(ax, key):
+        ax.plot(col(ap, "t"), col(ap, key), "--", color="#2E8B57", lw=1.8,
+                label="Athena++ CVODE")
+        ax.plot(col(ak, "t"), col(ak, key), "-", color="#C1440E", lw=4.0,
+                alpha=0.4, label=args.ak_si_label)
+        for label, (rows, _, _), style in extras:
+            ax.plot(col(rows, "t"), col(rows, key), label=label, **style)
+        if bdf:
+            ax.plot(col(bdf[0], "t"), col(bdf[0], key), ":", color="#3B5BA9",
+                    lw=1.8, label="AthenaK Kokkos BDF")
+
     fig, axes = plt.subplots(2, 3, figsize=(15, 8), constrained_layout=True)
     for ax, (key, label, scale) in zip(axes.flat, panels):
         if key == "dt":
             ax.plot(ap_t, ap_dt * MYR_PER_CODE, "--", color="#2E8B57", lw=1.6)
             ax.plot(ak_t, ak_dt * MYR_PER_CODE, "-", color="#C1440E", lw=4.0,
                     alpha=0.4)
-            if tab:
-                ax.plot(tab[1], tab[2] * MYR_PER_CODE, "-.", color="#7A2A06", lw=1.4)
+            for _, (_, t_hst, dt_hst), style in extras:
+                ax.plot(t_hst, dt_hst * MYR_PER_CODE, **style)
             if bdf:
                 ax.plot(bdf[1], bdf[2] * MYR_PER_CODE, ":", color="#3B5BA9", lw=1.6)
         else:
-            ax.plot(col(ap, "t"), col(ap, key), "--", color="#2E8B57", lw=1.8,
-                    label="Athena++ CVODE")
-            ax.plot(col(ak, "t"), col(ak, key), "-", color="#C1440E", lw=4.0,
-                    alpha=0.4, label="AthenaK semi-implicit")
-            if tab:
-                ax.plot(col(tab[0], "t"), col(tab[0], key), "-.", color="#7A2A06",
-                        lw=1.4, label="AthenaK semi-implicit, tabulated")
-            if bdf:
-                ax.plot(col(bdf[0], "t"), col(bdf[0], key), ":", color="#3B5BA9",
-                        lw=1.8, label="AthenaK Kokkos BDF")
+            draw(ax, key)
         ax.set(xlabel="t [Myr]", ylabel=label, yscale=scale,
                xlim=(0, max(ak[-1]["t"], ap[-1]["t"])))
         ax.grid(alpha=0.25, lw=0.5)
@@ -161,7 +185,21 @@ def main():
     fig.suptitle("Decaying turbulence from a shared snapshot: volume-integrated history")
     fig.savefig(args.out, dpi=140)
     print("wrote", args.out)
-    runs = ([("semi-implicit", ak)] + ([("si tabulated", tab[0])] if tab else [])
+
+    fig, axes = plt.subplots(3, 4, figsize=(18, 11), constrained_layout=True)
+    for ax, name in zip(axes.flat, SPECIES):
+        draw(ax, "x_" + name)
+        ax.set(xlabel="t [Myr]", ylabel=f"mass-weighted x({name})", yscale="log",
+               xlim=(0, max(ak[-1]["t"], ap[-1]["t"])))
+        ax.grid(alpha=0.25, lw=0.5)
+    axes[0, 0].legend(frameon=False, fontsize=8)
+    fig.suptitle("Decaying turbulence from a shared snapshot: "
+                 "mass-weighted abundance per H of every integrated species")
+    out = pathlib.Path(args.out)
+    species_out = out.with_name(out.stem + "_species" + out.suffix)
+    fig.savefig(species_out, dpi=140)
+    print("wrote", species_out)
+    runs = ([("semi-implicit", ak)] + [(label, rows) for label, (rows, _, _), _ in extras]
             + ([("Kokkos BDF", bdf[0])] if bdf else []))
     for name, rows in runs:
         for key in ("mass", "KE", "Eth", "H2", "CO"):
