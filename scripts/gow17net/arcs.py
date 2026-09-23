@@ -10,7 +10,7 @@ from .reactions import PROCESSES
 from .species import SPECIES
 
 _ORDER = {s.name: i for i, s in enumerate(SPECIES)}
-_PROCESS_ORDER = {p: i for i, p in enumerate(PROCESSES + ("ncr",))}
+_PROCESS_ORDER = {p: i for i, p in enumerate(PROCESSES)}
 
 
 def canonical(src, dst):

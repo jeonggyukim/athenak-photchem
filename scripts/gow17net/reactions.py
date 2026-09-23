@@ -14,7 +14,7 @@ from dataclasses import dataclass
 
 from .species import BY_NAME
 
-PROCESSES = ("cr", "crphoto", "uv", "grain", "rec", "chem", "coll")
+PROCESSES = ("cr", "crphoto", "uv", "grain", "rec", "chem", "coll", "ncr")
 
 # Build steps, in slide order.
 STEPS = {
@@ -110,6 +110,12 @@ REACTIONS = [
     _r((("2body", 15), ("2body", 16)), "H2", "H", "coll", 10, "H, H$_2$",
        [("tb", 21), ("tb", 22)]),
     _r(("2body", 17), "H", "H+", "coll", 10, "e", [("tb", 23)]),
+    # Only in TIGRESS-NCR (tigris-ncr src/photchem/ncr_rates.hpp): EUV
+    # photoionization of H (HIIRates, line 1611) and of H2 (line 1627). NCR's
+    # other additions are not reactions: above 2e4 K it takes the He and metal
+    # ionization state and cooling from CIE tables (lines 1713-1765).
+    Reaction((("ncr", 0),), "H", "H+", "ncr", 12, "EUV", network="ncr"),
+    Reaction((("ncr", 1),), "H2", "H2+", "ncr", 12, "EUV", network="ncr"),
 ]
 
 N_ATHENAK = {"cr": 7, "photo": 6, "grain": 5, "2body": 31}
