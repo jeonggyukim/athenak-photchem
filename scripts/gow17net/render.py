@@ -24,8 +24,13 @@ from .reactions import REACTIONS, STEPS  # noqa: E402
 from .species import BY_NAME  # noqa: E402
 
 THEMES = {
-    "light": dict(bg="white", fg="black", ghost_text="#5D6D7E"),
-    "dark": dict(bg="#101418", fg="#ECF0F1", ghost_text="#AAB7B8"),
+    "light": dict(bg="white", fg="black", ghost_text="#5D6D7E",
+                  past=style.PAST_COLOR, ghost_fill="white", process={}),
+    # Near-black process colours would vanish on a dark background, and the
+    # grey of earlier steps must stay dimmer than the current step.
+    "dark": dict(bg="#101418", fg="#ECF0F1", ghost_text="#AAB7B8",
+                 past="#4D5656", ghost_fill="#101418",
+                 process={"chem": "#F4F6F7", "rec": "#AEB6BF"}),
 }
 # Partner reactants that are species boxes get a dotted line to the arrow.
 PARTNER_SPECIES = {"He$^+$": "He+", "H$_3^+$": "H3+"}
@@ -97,7 +102,8 @@ def draw(layout, step=None, widths=None, annotations=None, theme="light",
         a = box_edge(pos[r.src], pos[r.dst], w, h)
         b = box_edge(pos[r.dst], pos[r.src], w, h)
         st = style.PROCESS_STYLE[r.process]
-        color = st["color"] if state == "current" else style.PAST_COLOR
+        color = (th["process"].get(r.process, st["color"]) if state == "current"
+                 else th["past"])
         lw = widths.get(i, st["lw"]) if widths else st["lw"]
         _arrow(ax, a, b, rad, color, lw, st["ls"], 1.0)
         if r.partner and r.process in ("chem", "coll", "ncr"):
@@ -111,7 +117,7 @@ def draw(layout, step=None, widths=None, annotations=None, theme="light",
                 s = box_edge(pos[partner], m, w, h)
                 ax.plot([s[0], m[0]], [s[1], m[1]], ls=(0, (1, 2)), lw=1.3,
                         color=style.PARTNER_COLOR if state == "current"
-                        else style.PAST_COLOR, zorder=1)
+                        else th["past"], zorder=1)
                 ax.plot(*m, "o", ms=4, color=style.PARTNER_COLOR, zorder=1.2)
 
     boxes = {}
@@ -126,8 +132,8 @@ def draw(layout, step=None, widths=None, annotations=None, theme="light",
         boxes[name] = ax.add_patch(FancyBboxPatch(
             (x - w / 2, y - h / 2), w, h,
             boxstyle="round,pad=0.02,rounding_size=0.12",
-            fc=style.BOX_FILL[sp.kind], ec=style.BOX_EDGE[sp.kind],
-            ls="--" if sp.kind == "ghost" else "-",
+            fc=th["ghost_fill"] if sp.kind == "ghost" else style.BOX_FILL[sp.kind],
+            ec=style.BOX_EDGE[sp.kind], ls="--" if sp.kind == "ghost" else "-",
             lw=2.8 if (annotations and sp.limits_step) else 1.2, zorder=2))
         ax.text(x, y, sp.tex, ha="center", va="center", fontsize=style.FONT["species"],
                 style="italic" if sp.kind == "ghost" else "normal",
@@ -165,7 +171,8 @@ def _legend(ax, layout, th, annotations, step):
     y = ly
     for kind in kinds:
         st = style.PROCESS_STYLE[kind]
-        _arrow(ax, (lx, y), (lx + 0.8 * k, y), 0.0, st["color"], st["lw"], st["ls"], 1.0)
+        _arrow(ax, (lx, y), (lx + 0.8 * k, y), 0.0,
+               th["process"].get(kind, st["color"]), st["lw"], st["ls"], 1.0)
         ax.text(lx + 0.95 * k, y, style.PROCESS_LABEL[kind], fontsize=fs, va="center",
                 color=th["fg"])
         y -= dy
@@ -174,7 +181,8 @@ def _legend(ax, layout, th, annotations, step):
                        ("ghost", "ghost (from conservation laws)")):
         ax.add_patch(FancyBboxPatch((lx, y - 0.17 * k), 0.8 * k, 0.34 * k,
                                     boxstyle="round,pad=0.01,rounding_size=0.06",
-                                    fc=style.BOX_FILL[kind], ec=style.BOX_EDGE[kind],
+                                    fc=th["ghost_fill"] if kind == "ghost"
+                                    else style.BOX_FILL[kind], ec=style.BOX_EDGE[kind],
                                     ls="--" if kind == "ghost" else "-", lw=1.2))
         ax.text(lx + 0.95 * k, y, text, fontsize=fs, va="center", color=th["fg"])
         y -= dy
