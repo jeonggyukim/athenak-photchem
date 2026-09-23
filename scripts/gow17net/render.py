@@ -154,39 +154,42 @@ def draw(layout, step=None, widths=None, annotations=None, theme="light",
 
 def _legend(ax, layout, th, annotations, step):
     lx, ly = layout.legend_xy
-    dy = 0.55
+    # Legend geometry is in data units; scale it with the layout's vertical
+    # span so it has the same size on screen in every layout (grid = 1).
+    k = (layout.ylim[1] - layout.ylim[0]) / 11.9
+    dy = 0.55 * k
     fs = style.FONT["legend"] - 1
     kinds = ["cr", "crphoto", "uv", "grain", "rec", "chem", "coll"]
     if step is not None and step >= NCR_STEP:
         kinds.append("ncr")
     y = ly
-    for k in kinds:
-        st = style.PROCESS_STYLE[k]
-        _arrow(ax, (lx, y), (lx + 0.8, y), 0.0, st["color"], st["lw"], st["ls"], 1.0)
-        ax.text(lx + 0.95, y, style.PROCESS_LABEL[k], fontsize=fs, va="center",
+    for kind in kinds:
+        st = style.PROCESS_STYLE[kind]
+        _arrow(ax, (lx, y), (lx + 0.8 * k, y), 0.0, st["color"], st["lw"], st["ls"], 1.0)
+        ax.text(lx + 0.95 * k, y, style.PROCESS_LABEL[kind], fontsize=fs, va="center",
                 color=th["fg"])
         y -= dy
-    y -= 0.15
+    y -= 0.15 * k
     for kind, text in (("ion", "ion"), ("molecule", "molecule"),
                        ("ghost", "ghost (from conservation laws)")):
-        ax.add_patch(FancyBboxPatch((lx, y - 0.17), 0.8, 0.34,
+        ax.add_patch(FancyBboxPatch((lx, y - 0.17 * k), 0.8 * k, 0.34 * k,
                                     boxstyle="round,pad=0.01,rounding_size=0.06",
                                     fc=style.BOX_FILL[kind], ec=style.BOX_EDGE[kind],
                                     ls="--" if kind == "ghost" else "-", lw=1.2))
-        ax.text(lx + 0.95, y, text, fontsize=fs, va="center", color=th["fg"])
+        ax.text(lx + 0.95 * k, y, text, fontsize=fs, va="center", color=th["fg"])
         y -= dy
     if annotations:
-        ax.add_patch(FancyBboxPatch((lx, y - 0.17), 0.8, 0.34,
+        ax.add_patch(FancyBboxPatch((lx, y - 0.17 * k), 0.8 * k, 0.34 * k,
                                     boxstyle="round,pad=0.01,rounding_size=0.06",
                                     fc="white", ec="#1B2631", lw=2.8))
-        ax.text(lx + 0.95, y, "limits the substep", fontsize=fs, va="center",
+        ax.text(lx + 0.95 * k, y, "limits the substep", fontsize=fs, va="center",
                 color=th["fg"])
         y -= dy
         for key in ("non-equilibrium", "ghost", "equilibrium"):
-            ax.add_patch(FancyBboxPatch((lx - 0.08, y - 0.25), 0.96, 0.5,
+            ax.add_patch(FancyBboxPatch((lx - 0.08 * k, y - 0.25 * k), 0.96 * k, 0.5 * k,
                                         boxstyle="round,pad=0.01,rounding_size=0.1",
                                         fc=style.NCR_HALO[key], ec="none", alpha=0.5))
-            ax.text(lx + 0.95, y, style.NCR_LABEL[key], fontsize=fs, va="center",
+            ax.text(lx + 0.95 * k, y, style.NCR_LABEL[key], fontsize=fs, va="center",
                     color=th["fg"])
             y -= dy
         ax.text(lx, y, "① order in block Gauss–Seidel", fontsize=fs,
