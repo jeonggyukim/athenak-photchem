@@ -11,21 +11,22 @@ from .reactions import STEPS
 CAPTIONS = {
     1: "Twelve species are integrated; H, He, C, O, Si and the electrons follow "
        "from element and charge conservation.",
-    2: "Cosmic rays reach deep into clouds, ionizing H, H$_2$, He, C and Si.",
+    2: "Cosmic rays, and the ultraviolet light they excite in H$_2$, reach deep into "
+       "clouds and ionize H, H$_2$, He, C and Si.",
     3: "Far-ultraviolet photons ionize C and Si and dissociate H$_2$, CO, CH$_x$ "
        "and OH$_x$; cosmic rays also make a weak ultraviolet field that breaks CO.",
     4: "Dust grains are where H$_2$ forms, and grain surfaces neutralize "
        "H$^+$, He$^+$, C$^+$ and Si$^+$.",
-    5: "Free electrons recombine with the ions; H$_3^+$ recombines to H$_2$ + H "
-       "or to three H atoms.",
-    6: "H$_2^+$ reacts with H$_2$ to make H$_3^+$, which drives the ion chemistry; "
-       "He$^+$ breaks H$_2$ apart.",
+    5: "Free electrons recombine with H$^+$, He$^+$, C$^+$ and Si$^+$; H$_3^+$ recombines "
+       "to H$_2$ + H or to three H atoms.",
+    6: "H$_2^+$ reacts with H$_2$ to make H$_3^+$, which drives the ion chemistry, or with "
+       "H to give H$^+$; He$^+$ + H$_2$ gives H$^+$ + H or H$_2^+$.",
     7: "H$_3^+$ + C and C$^+$ + H$_2$ make the CH hydrides (CH$_x$), CH$_x$ + O makes "
        "CO, and He$^+$ + CO returns the carbon to C$^+$.",
     8: "Charge exchange with H$^+$ makes O$^+$; O$^+$ + H$_2$ and H$_3^+$ + O make the "
        "OH hydrides (OH$_x$), and OH$_x$ + C makes CO.",
-    9: "CO and HCO$^+$ turn into each other: H$_3^+$ and cosmic rays make HCO$^+$ "
-       "from CO, and HCO$^+$ recombines back to CO.",
+    9: "H$_3^+$ + CO and cosmic rays turn CO into HCO$^+$, C$^+$ + OH$_x$ also makes "
+       "HCO$^+$, and HCO$^+$ recombines to CO.",
     10: "In hot gas, collisions dissociate H$_2$ and ionize H.",
     11: "AthenaK updates the species in this order (block Gauss–Seidel); H$_2$ "
         "and CO limit the substep. Halos show how TIGRESS-NCR treats the species it keeps.",

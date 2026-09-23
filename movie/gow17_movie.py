@@ -153,7 +153,8 @@ class BuildNetwork(Scene):
             # arrows down so they stay inside the frame (same factor for all
             # arrows of one pair, so their order is kept).
             chord = math.dist(a, b)
-            rad_eff = rad * min(1.0, LONG_ARROW / chord) if chord > 0 else rad
+            rad_eff = (rad * min(1.0, LONG_ARROW / chord)
+                       if chord > 0 and LAYOUT.name == "slab" else rad)
             arrows[i] = _make_arrow(TO_FRAME(a), TO_FRAME(b), -4.0 * math.atan(rad_eff),
                                     PROCESS_COLOR[r.process], r.process)
             # Partner reactant of a two-body reaction, at the label position

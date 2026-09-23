@@ -22,7 +22,7 @@ STEPS = {
     2: "Cosmic-ray ionization",
     3: "FUV photoreactions",
     4: "Grain processes",
-    5: "Radiative recombination",
+    5: "Recombination",
     6: "Hydrogen ion chemistry",
     7: "Carbon chemistry",
     8: "Oxygen chemistry",
