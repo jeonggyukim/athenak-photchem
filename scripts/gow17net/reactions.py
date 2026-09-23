@@ -18,18 +18,18 @@ PROCESSES = ("cr", "crphoto", "uv", "grain", "rec", "chem", "coll", "ncr")
 
 # Build steps, in slide order.
 STEPS = {
-    1: "species",
-    2: "cosmic-ray ionization",
+    1: "Species",
+    2: "Cosmic-ray ionization",
     3: "FUV photoreactions",
-    4: "grain processes",
-    5: "radiative recombination",
-    6: "hydrogen ion chemistry",
-    7: "carbon chemistry",
-    8: "oxygen chemistry",
-    9: "CO-HCO+ cycle",
-    10: "collisional (high T)",
-    11: "solver annotations",
-    12: "processes only in NCR",
+    4: "Grain processes",
+    5: "Radiative recombination",
+    6: "Hydrogen ion chemistry",
+    7: "Carbon chemistry",
+    8: "Oxygen chemistry",
+    9: "CO-HCO$^+$ cycle",
+    10: "Collisional processes (high T)",
+    11: "Solver annotations",
+    12: "In TIGRESS-NCR but not in GOW17",
 }
 
 
@@ -111,11 +111,14 @@ REACTIONS = [
        [("tb", 21), ("tb", 22)]),
     _r(("2body", 17), "H", "H+", "coll", 10, "e", [("tb", 23)]),
     # Only in TIGRESS-NCR (tigris-ncr src/photchem/ncr_rates.hpp): EUV
-    # photoionization of H (HIIRates, line 1611) and of H2 (line 1627). NCR's
-    # other additions are not reactions: above 2e4 K it takes the He and metal
-    # ionization state and cooling from CIE tables (lines 1713-1765).
+    # photoionization of H (xi_ph_HI in the H+ creation rate, line 1609) and EUV
+    # destruction of H2 (xi_ph_H2 in the H2 destruction rate, line 1626). NCR
+    # has no H2+, so the hydrogen of a destroyed H2 returns to H through the
+    # element budget: the arrow goes to H. NCR's other addition is not a
+    # reaction: above 2e4 K it takes the He and metal ionization state and
+    # cooling from CIE tables (lines 1713-1765).
     Reaction((("ncr", 0),), "H", "H+", "ncr", 12, "EUV", network="ncr"),
-    Reaction((("ncr", 1),), "H2", "H2+", "ncr", 12, "EUV", network="ncr"),
+    Reaction((("ncr", 1),), "H2", "H", "ncr", 12, "EUV", network="ncr"),
 ]
 
 N_ATHENAK = {"cr": 7, "photo": 6, "grain": 5, "2body": 31}

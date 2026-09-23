@@ -9,14 +9,18 @@ Render (conda env manimgl, from the repository root):
     manimgl movie/gow17_movie.py BuildNetwork -w --hd   # 1080p
 """
 import math
+
+import numpy as np
 import os
 import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
 
-from manimlib import (DOWN, LEFT, RIGHT, UP, WHITE, Arrow, FadeIn, FadeOut, FadeTransform,  # noqa: E402
-                      LaggedStart, RoundedRectangle, Scene, ShowCreation, Tex,
+from manimlib import (DOWN, LEFT, RIGHT, UP, WHITE, AnimationGroup,  # noqa: E402
+                      ArcBetweenPoints, ArrowTip, DashedVMobject, Dot, FadeIn,
+                      FadeOut, FadeTransform, Indicate, LaggedStart, MoveAlongPath,
+                      RoundedRectangle, Scene, ShowCreation, Succession, Tex,
                       TexText, VGroup)
 
 from gow17net import arcs, layouts, style  # noqa: E402
@@ -52,6 +56,30 @@ def _frame_map():
 
 
 TO_FRAME, SCALE = _frame_map()
+
+
+DASHED = ("uv", "crphoto", "coll")
+
+
+def _make_arrow(start, end, angle, color, process):
+    """An arrow as a stroked arc (the body) plus a separate tip.
+
+    ShowCreation on ManimGL's filled Arrow traces its outline, which shows up
+    as a thin wedge with the tip first; a stroked body draws cleanly from the
+    source to the target, and the tip is added when the body arrives.
+    """
+    start, end = np.array(start, dtype=float), np.array(end, dtype=float)
+    body = ArcBetweenPoints(start, end, angle=angle if abs(angle) > 1e-6 else 1e-6)
+    body.set_stroke(color, width=3.0)
+    path = body.copy()
+    if process in DASHED:
+        body = DashedVMobject(body, num_dashes=max(6, int(body.get_arc_length() / 0.12)))
+        body.set_stroke(color, width=3.0)
+    tangent = path.get_end() - path.point_from_proportion(0.96)
+    tip = ArrowTip(angle=math.atan2(tangent[1], tangent[0]), width=0.12, length=0.14)
+    tip.set_fill(color, opacity=1.0).move_to(path.get_end() - 0.05 * tangent /
+                                             (1e-9 + math.hypot(tangent[0], tangent[1])))
+    return VGroup(body, tip), path
 
 
 def _slab_background():
@@ -125,9 +153,8 @@ class BuildNetwork(Scene):
             # arrows of one pair, so their order is kept).
             chord = math.dist(a, b)
             rad_eff = rad * min(1.0, LONG_ARROW / chord) if chord > 0 else rad
-            arrows[i] = Arrow(TO_FRAME(a), TO_FRAME(b), buff=0.02,
-                              path_arc=-4.0 * math.atan(rad_eff), thickness=2.0,
-                              fill_color=PROCESS_COLOR[r.process])
+            arrows[i] = _make_arrow(TO_FRAME(a), TO_FRAME(b), -4.0 * math.atan(rad_eff),
+                                    PROCESS_COLOR[r.process], r.process)
 
         if LAYOUT.name == "slab":
             zones, light = _slab_background()
@@ -154,11 +181,26 @@ class BuildNetwork(Scene):
             new_title = TexText(f"{step}. {STEPS[step]}").set_color(WHITE)
             new_title.scale(0.8).to_edge(UP)
             new_caption = self._caption(step)
-            fades = [arrows[i].animate.set_fill(PAST) for i in shown]
+            fades = []
+            for i in shown:
+                body, tip = arrows[i][0]
+                fades += [body.animate.set_stroke(PAST), tip.animate.set_fill(PAST)]
             self.play(FadeTransform(title, new_title), FadeOut(caption),
                       *fades, run_time=1.0)
-            self.play(LaggedStart(*[ShowCreation(arrows[i]) for i in new],
-                                  lag_ratio=0.15), run_time=2.5)
+            beats = []
+            for i in new:
+                (body, tip), path = arrows[i]
+                color = PROCESS_COLOR[REACTIONS[i].process]
+                dot = Dot(radius=0.06).set_fill(color).move_to(path.get_start())
+                beats.append(Succession(
+                    ShowCreation(body, run_time=0.8),
+                    AnimationGroup(FadeIn(tip, run_time=0.2),
+                                   MoveAlongPath(dot, path, run_time=0.6),
+                                   Indicate(boxes[REACTIONS[i].dst], scale_factor=1.12,
+                                            color=color, run_time=0.6)),
+                    FadeOut(dot, run_time=0.1)))
+            self.play(LaggedStart(*beats, lag_ratio=0.35),
+                      run_time=max(2.5, 0.55 * len(new) + 1.2))
             self.play(FadeIn(new_caption))
             self.wait(3)
             title, caption = new_title, new_caption

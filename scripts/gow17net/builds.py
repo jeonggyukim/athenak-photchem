@@ -29,8 +29,8 @@ CAPTIONS = {
     10: "In hot gas, collisions dissociate H$_2$ and ionize H.",
     11: "AthenaK updates the species in this order (block Gauss–Seidel); H$_2$ "
         "and CO limit the substep. Halos show how TIGRESS-NCR treats the species it keeps.",
-    12: "TIGRESS-NCR adds EUV photoionization of H and H$_2$, and above 2$\\times$10$^4$ K "
-        "takes the He and metal ionization state from CIE tables.",
+    12: "TIGRESS-NCR adds EUV photoionization of H and EUV destruction of H$_2$, and "
+        "above 2$\\times$10$^4$ K takes the He and metal ionization state from CIE tables.",
 }
 assert set(CAPTIONS) == set(STEPS)
 
@@ -43,7 +43,8 @@ def render_sequence(layout, outdir, theme="light", widths=None):
     for step, name in STEPS.items():
         fig, _ = render.draw(layout, step=step, widths=widths, theme=theme,
                              title=f"{step}. {name}", caption=CAPTIONS[step])
-        path = outdir / f"build_{step:02d}_{name.replace(' ', '_').replace('+', 'p')}.png"
+        slug = "".join(c if c.isalnum() else "_" for c in name.lower()).strip("_")
+        path = outdir / f"build_{step:02d}_{slug}.png"
         render.save(fig, path)
         paths.append(path)
     return paths
