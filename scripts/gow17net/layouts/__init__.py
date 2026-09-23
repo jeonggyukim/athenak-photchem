@@ -27,7 +27,7 @@ class Layout:
 
 
 def get(name):
-    from . import grid, radial, slab
+    from . import grid, ladder, radial, slab
     layouts = {"grid": grid.GRID, "grid_charge_rows": grid.GRID_CHARGE_ROWS,
-               "radial": radial.RADIAL, "slab": slab.SLAB}
+               "radial": radial.RADIAL, "slab": slab.SLAB, "ladder": ladder.LADDER}
     return layouts[name]
