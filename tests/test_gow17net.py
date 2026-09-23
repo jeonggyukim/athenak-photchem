@@ -33,7 +33,7 @@ def test_offsets_symmetric():
         assert abs(sum(o)) < 1e-12
 
 
-LAYOUTS = ("grid", "grid_charge_rows", "radial")
+LAYOUTS = ("grid", "grid_charge_rows", "radial", "slab")
 
 
 def _layout(name):
