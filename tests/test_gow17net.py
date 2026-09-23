@@ -72,3 +72,12 @@ def test_boxes_stay_put_across_build_steps():
         if extents is None:
             extents = ext
         assert ext == extents, step
+
+
+def test_width_fractions_are_shares():
+    from gow17net import fluxes, widths
+    for phase in fluxes.PHASES:
+        frac = widths.phase_fractions(phase)
+        assert frac, phase
+        for i, f in frac.items():
+            assert 0.0 <= f <= 1.0 + 1e-9, (phase, i, f)
