@@ -1,12 +1,15 @@
 #!/usr/bin/env python
-"""History of the decaying-turbulence runs from the two codes' .hst files.
+"""History of the decaying-turbulence runs from the codes' .hst files, for any number
+of runs.
 
-Both codes write the same history header format (`[n]=name`), with volume
-integrals over the box: mass, kinetic energy per direction and total energy.
-Thermal energy is total minus kinetic, since neither run has magnetic fields.
+AthenaK and Athena++ write the same history header format (`[n]=name`), with volume
+integrals over the box: mass, kinetic energy per direction and total energy. Thermal
+energy is total minus kinetic, since neither run has magnetic fields.
 
 Usage:
-    plot_turb_hst.py --ak ak.hydro.hst --ap ap.hst --out fig_turb_hst.png
+    plot_turb_hst.py --hst ap.hst:"Athena++ CVODE" --hst ak.hydro.hst:"AthenaK" \
+        --out fig_turb_hst.png
+Each --hst is FILE[:LABEL]; one is enough. The older --ak FILE --ap FILE still works.
 """
 import argparse
 import re
@@ -39,19 +42,31 @@ def read_hst(fname):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--ak", required=True, help="AthenaK .hydro.hst")
-    parser.add_argument("--ap", required=True, help="Athena++ .hst")
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--hst", action="append", default=[],
+                        help="FILE[:LABEL]; repeat for each run")
+    parser.add_argument("--ak", help="AthenaK .hydro.hst")
+    parser.add_argument("--ap", help="Athena++ .hst")
     parser.add_argument("--out", default="fig_turb_hst.png")
     args = parser.parse_args()
 
-    runs = [("Athena++ CVODE", read_hst(args.ap), "C0"),
-            ("AthenaK semi-implicit", read_hst(args.ak), "C1")]
+    specs = list(args.hst)
+    if args.ap:
+        specs.append(f"{args.ap}:Athena++ CVODE")
+    if args.ak:
+        specs.append(f"{args.ak}:AthenaK semi-implicit")
+    if not specs:
+        parser.error("give at least one --hst")
+    runs = []
+    for i, spec in enumerate(specs):
+        fname, _, label = spec.partition(":")
+        runs.append((label or fname, read_hst(fname), f"C{i}"))
+
     panels = [("KE", "kinetic energy [code]"),
               ("TE", "thermal energy [code]"),
               ("dt", "dt [Myr]"),
               ("mass", "mass [code]")]
-
     fig, axes = plt.subplots(2, 2, figsize=(10, 7), sharex=True)
     for ax, (key, label) in zip(axes.flat, panels):
         for name, h, c in runs:
