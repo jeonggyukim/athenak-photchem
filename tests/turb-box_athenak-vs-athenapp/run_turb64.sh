@@ -28,7 +28,19 @@
 #
 # Output goes to $CHEMDATA. A stage refuses to overwrite a run directory that
 # already holds run.out; move it aside or point CHEMDATA elsewhere.
+#
+# NX sets the resolution, NX^3 cells (default 64). The driving run is one
+# MeshBlock on one rank; the chemistry runs use MB^3 MeshBlocks (default
+# min(32, NX/2), at least 8 blocks; MB must divide NX). For NX other than 64 the
+# output goes to <data>-n<NX> unless CHEMDATA is set.
 set -e
+NX=${NX:-64}
+MB=${MB:-$(( NX / 2 < 32 ? NX / 2 : 32 ))}
+IC=shared_ic$NX.vtk
+DRIVE_RES=(mesh/nx1=$NX mesh/nx2=$NX mesh/nx3=$NX
+           meshblock/nx1=$NX meshblock/nx2=$NX meshblock/nx3=$NX)
+CHEM_RES=(mesh/nx1=$NX mesh/nx2=$NX mesh/nx3=$NX
+          meshblock/nx1=$MB meshblock/nx2=$MB meshblock/nx3=$MB problem/vtkfile=$IC)
 
 if [ -n "$SLURM_JOB_ID" ]; then
   HERE=$SLURM_SUBMIT_DIR/tests/turb-box_athenak-vs-athenapp
@@ -45,6 +57,7 @@ if [ -z "$MACHINE" ]; then
   esac
 fi
 source "${CHEM_MACHINE:-$HERE/machines/$MACHINE.sh}"
+[ "$NX" = 64 ] || [ -n "$CHEMDATA" ] || DATA=$DATA-n$NX
 # The python scripts find AthenaK's bin_convert.py through this.
 export ATHENAK_ROOT=$AK
 
@@ -129,34 +142,34 @@ stamp athena-pp "$AP"
 if want drive; then
   check_fresh
   prepare drive64_run drive64.athinput
-  run drive64_run 1 "$AKBIN" -i drive64.athinput "${OVR[@]}"
+  run drive64_run 1 "$AKBIN" -i drive64.athinput "${DRIVE_RES[@]}" "${OVR[@]}"
 fi
 
 if want ic; then
   last=$(ls "$DATA"/drive64_run/bin/drive64.hydro_w.*.bin | tail -1)
-  "$PY" "$HERE/athenak_bin_to_vtk.py" "$last" "$DATA/shared_ic64.vtk"
-  echo "shared_ic64.vtk from $last" >> "$DATA/versions.txt"
+  "$PY" "$HERE/athenak_bin_to_vtk.py" "$last" "$DATA/$IC"
+  echo "$IC from $last" >> "$DATA/versions.txt"
 fi
 
 if want si; then
   check_fresh
   prepare turb64_si_run turb64_si.athinput
-  cp -f "$DATA/shared_ic64.vtk" "$DATA/turb64_si_run/"
-  run turb64_si_run "$NP" "$AKBIN" -i turb64_si.athinput "${OVR[@]}"
+  cp -f "$DATA/$IC" "$DATA/turb64_si_run/"
+  run turb64_si_run "$NP" "$AKBIN" -i turb64_si.athinput "${CHEM_RES[@]}" "${OVR[@]}"
 fi
 
 if want bdf; then
   check_fresh
   prepare turb64_bdf_run turb64_bdf.athinput
-  cp -f "$DATA/shared_ic64.vtk" "$DATA/turb64_bdf_run/"
-  run turb64_bdf_run "$NP" "$AKBIN" -i turb64_bdf.athinput "${OVR[@]}"
+  cp -f "$DATA/$IC" "$DATA/turb64_bdf_run/"
+  run turb64_bdf_run "$NP" "$AKBIN" -i turb64_bdf.athinput "${CHEM_RES[@]}" "${OVR[@]}"
 fi
 
 if want cvode; then
   check_ap
   prepare turb64_cvode_run turb64_cvode.athinput
-  cp -f "$DATA/shared_ic64.vtk" "$DATA/turb64_cvode_run/"
-  run turb64_cvode_run "$NP" "$APBIN" -i turb64_cvode.athinput "${OVR[@]}"
+  cp -f "$DATA/$IC" "$DATA/turb64_cvode_run/"
+  run turb64_cvode_run "$NP" "$APBIN" -i turb64_cvode.athinput "${CHEM_RES[@]}" "${OVR[@]}"
 fi
 
 if want join; then
