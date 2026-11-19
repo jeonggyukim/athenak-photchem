@@ -136,8 +136,10 @@ def main():
     for j, t in enumerate(["(a) H$_2$, CO, H$^+$", "(b) remaining species",
                            "(c) temperature", "(d) error at check times"]):
         ax[0, j].set_title(t)
-    fig.suptitle("GOW17 uniform, 4$^3$: converged Kokkos BDF (solid) vs semi_implicit at "
-                 "its defaults (dashed); grey lines: check times", fontsize=13)
+    fig.suptitle("GOW17 uniform, 4$^3$: converged Kokkos BDF (rtol = 10$^{-7}$, "
+                 "atol = 10$^{-16}$; solid) vs semi_implicit at its defaults (dashed); "
+                 "default BDF in (d): rtol = 10$^{-3}$, atol = 10$^{-6}$; grey lines: "
+                 "check times", fontsize=13)
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     fig.savefig(args.out, dpi=130)
     print("wrote", args.out)
