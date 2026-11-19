@@ -1,0 +1,92 @@
+# AthenaXXX input file for the chemistry test with the GOW17 network and uniform abundance
+
+<comment>
+problem   = GOW17 chemistry test case
+reference = Section 4.1 in Gong et al. 2023, arXiv:2305.04965
+
+<job>
+basename  = n100_lg
+
+<mesh>
+nghost    = 2         # Number of ghost cells
+nx1       = 4
+x1min     = -0.03125000
+x1max     = 0.03125000
+ix1_bc    = periodic  # Inner-X1 boundary condition flag
+ox1_bc    = periodic  # Outer-X1 boundary condition flag
+
+nx2       = 4
+x2min     = -0.03125000
+x2max     = 0.03125000
+ix2_bc    = periodic  # Inner-X2 boundary condition flag
+ox2_bc    = periodic  # Outer-X2 boundary condition flag
+
+nx3       = 4
+x3min     = -0.03125000
+x3max     = 0.03125000
+ix3_bc    = outflow   # Inner-X3 boundary condition flag
+ox3_bc    = outflow   # Outer-X3 boundary condition flag
+
+<meshblock>
+nx1       = 4
+nx2       = 4
+nx3       = 4
+
+<time>
+evolution  = dynamic   # dynamic/kinematic/static
+integrator = rk2       # time integration algorithm
+cfl_number = 0.8       # The Courant, Friedrichs, & Lewy (CFL) Number
+nlim       = -1
+tlim       = 30.0
+ndiag      = 1         # cycles between diagnostic output
+
+<hydro>
+eos             = ideal             # EOS type
+reconstruct     = plm               # spatial reconstruction method
+rsolver         = llf               # Riemann-solver to be used
+gamma           = 1.666666666666667 # gamma = C_p/C_v
+nscalars        = 0                 # number of passive scalars in hydro
+iso_sound_speed = 1.0               # isothermal sound speed
+
+<units> 
+# ISM units
+length_cgs  = 3.0856775809623245e+18  # length is 1 pc
+mass_cgs    = 6.882615081124725e+31   # number density is 1 cm^-3
+time_cgs    = 3.08567758e+13          # time is 1 Myr
+mu          = 1.27                    # mean molecular weight
+
+<chemistry>
+report_substeps            = false
+GOW17_jacobian_hoist       = true
+sweep_n_substep_fixed      = 100
+sweep_ordered              = true
+sweep_h2_first             = false
+sweep_exact_map            = false
+sweep_exact_block          = false
+network                    = GOW17      # Chemistry network to be used
+ode_solver                 = semi_implicit_sweep # ODE solver to be used
+#kokkos_BDF_first_step_frac = 1.0e-6     # The first step fraction, tuned for this problem
+
+# chemistry network parameters:
+GOW17_Z_d        = 1.           # dust metallicity
+GOW17_Z_g        = 1.           # gas metallicity
+GOW17_xHe        = 0.1          # He per H, default = 0.1
+GOW17_xC         = 1.6e-4       # C atom per H, this is Z=1 value, default 1.6e-4
+GOW17_xO         = 3.2e-4       # O atom per H, this is Z=1 value, default 3.2e-4
+GOW17_xS         = 3.5e-6       # S atom per H, this is Z=1 value, default 3.5e-6
+GOW17_xSi        = 1.7e-6       # Si atom per H, this is Z=1 value, default 1.7e-6
+
+<problem>
+pgen_name   = GOW17_uniform # problem generator name
+n_H         = 1.0921e+02    # initial density, in units of number density of hydrogen atoms
+vx_kms      = 0.0           # initial x-velocity, in km/s
+init_default = 1.0e-6       # initial abundances
+
+
+<output1>
+file_type   = tab
+variable    = hydro_w
+data_format = %16.9e
+dcycle      = 1
+slice_x2    = 0.0
+slice_x3    = 0.0
