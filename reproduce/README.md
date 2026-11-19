@@ -1,44 +1,47 @@
-# 64^3 decaying turbulence: AthenaK against Athena++
+# Decaying turbulence with GOW17 chemistry: AthenaK vs Athena++
 
-AthenaK semi-implicit (and Kokkos BDF) GOW17 chemistry against Athena++ CVODE,
-cell by cell, from one shared initial condition.
+This test runs the same turbulent box with GOW17 chemistry in AthenaK and in
+Athena++ and compares the two, cell by cell. AthenaK uses its semi-implicit
+solver (or Kokkos BDF); Athena++ uses CVODE.
 
-| file | holds |
-| --- | --- |
-| `run_turb64.sh` | runs every stage, from the driven box to the figures |
-| `inputs/` | `drive64` (driving), `turb64_*` (chemistry runs; `_n1_` variants at n_H = 1, G0 = 1), `athinput.pdr1d` (Athena++ 1D PDR) |
-| `patches/` | the one-file Athena++ fix the comparison needs |
-| `machines/` | paths and rank counts per machine; `default.sh` for anyone else |
-| `log.md` | what was run, on which commits, and what it measured |
+The two codes drive turbulence differently, so the box is driven once, in
+AthenaK, and both codes then start from that same snapshot. From there each
+code evolves the gas for 2 Myr with chemistry on and the driving off.
 
-## The test
+## What happens
 
-1. AthenaK drives hydro-only turbulence in a periodic 32 pc box at 64^3,
-   n_H = 10 cm^-3, from T = 10^4 K to t = 12 code units (`drive64.athinput`).
-2. The last dump is converted to a legacy VTK file, `shared_ic64.vtk`.
-3. AthenaK and Athena++ both read that file and evolve it for 2.0454 code
-   units (2 Myr) with GOW17 chemistry and no forcing (`turb64_si.athinput`,
-   `turb64_bdf.athinput`, `turb64_cvode.athinput`).
+1. **Drive** (`inputs/drive64.athinput`). AthenaK stirs a periodic box,
+   32 pc on a side with 64^3 cells, at a mean density n_H = 10 cm^-3. This run
+   is hydrodynamics only, starting at T = 10^4 K and running to t = 12 code
+   units.
+2. **Shared initial condition.** The last snapshot of the driven run is
+   written as a legacy VTK file, `shared_ic64.vtk`.
+3. **Chemistry runs.** AthenaK (`inputs/turb64_si.athinput`, or
+   `turb64_bdf.athinput` for BDF) and Athena++ (`inputs/turb64_cvode.athinput`)
+   both read `shared_ic64.vtk` and run for 2 Myr with GOW17 chemistry.
+4. **Comparison.** The script plots the history of both runs and slices of the
+   final state side by side, and makes a movie.
 
-The two codes have different turbulence drivers, so sharing the file is what
-makes a cell-by-cell comparison possible. Both use RK2, PLM and HLLC, split the
-chemistry from the hydro once per step, and use the constant H2 grain
-formation rate of 3e-17 cm^3 s^-1 (`is_kgrH2_const = true` in AthenaK). The
-radiation field is constant (G0 = 1e-6, or 1 in the `_n1_` runs); there is no
-six-ray shielding.
+Both codes use the same hydro scheme (RK2, PLM, HLLC), update the chemistry
+once per hydro step, and use a constant H2 formation rate on grains,
+3e-17 cm^3 s^-1 (`is_kgrH2_const = true` in AthenaK). The radiation field is
+uniform, G0 = 1e-6; there is no six-ray shielding. The `_n1_` inputs repeat the
+test at n_H = 1 cm^-3 in an unshielded field, G0 = 1.
 
-## Getting the codes
+## What you need
 
-**AthenaK**, with the `GOW17_turb` and `GOW17_read_vtk` problem generators:
+**AthenaK** from the `semi-implicit` branch of my fork, which has the two
+problem generators this test needs (`GOW17_turb` for the driving and
+`GOW17_read_vtk` for reading the snapshot):
 
     git clone --recursive -b semi-implicit https://github.com/jeonggyukim/athenak.git ~/athenak
     cd ~/athenak && git checkout 2deb5e40
     cmake -B build -DCMAKE_BUILD_TYPE=Release -DAthena_ENABLE_MPI=ON
     make -C build -j8
 
-**Athena++** at upstream `823614c`, plus a compile fix for `read_vtk.cpp`
-under MPI (upstream assigns to an undeclared `ierr`). CVODE comes from
-SUNDIALS; 6.7.0 was used.
+**Athena++** at upstream commit `823614c`, with one small patch from this
+directory (upstream's `read_vtk.cpp` does not compile with MPI), built with
+CVODE from SUNDIALS (version 6.7.0 was used):
 
     git clone https://github.com/PrincetonUniversity/athena.git ~/athena
     cd ~/athena && git checkout 823614c
@@ -48,40 +51,52 @@ SUNDIALS; 6.7.0 was used.
     make -j8
     gcc -Wall -O2 -o vis/vtk/join_vtk++ vis/vtk/join_vtk++.c -lm
 
-**Python** 3 with numpy and matplotlib, and `ffmpeg` on `PATH` for the movie.
+**Python 3** with numpy and matplotlib, and `ffmpeg` for the movie.
 
-## Running
+## Running it
 
-From the repository root:
+From the top of this repository:
 
-    bash reproduce/run_turb64.sh                   # every stage
-    bash reproduce/run_turb64.sh drive ic          # only the shared initial condition
-    bash reproduce/run_turb64.sh si bdf cvode join plot
-    SMOKE=1 bash reproduce/run_turb64.sh           # every stage for 20 cycles, ~2 min
+    SMOKE=1 bash reproduce/run_turb64.sh    # quick check: every step for 20 cycles, ~2 min
+    bash reproduce/run_turb64.sh            # the full test
 
-| stage | does | time, 8 cores |
+You can also run single steps by name, for example only the shared initial
+condition, or only the chemistry runs and plots once it exists:
+
+    bash reproduce/run_turb64.sh drive ic
+    bash reproduce/run_turb64.sh si cvode join plot
+
+The steps and how long each took on an Apple-silicon MacBook Pro with 8 cores:
+
+| step | what it does | time |
 | --- | --- | --- |
-| `drive` | AthenaK driven turbulence, hydro only, 1 rank | 4.6 min |
-| `ic` | last `drive64` dump -> `shared_ic64.vtk` | seconds |
-| `si` | AthenaK semi-implicit | 28 s |
-| `bdf` | AthenaK Kokkos BDF, rtol 1e-2, atol 1e-15 | ~35-90 min, estimated |
-| `cvode` | Athena++ CVODE, rtol 1e-2, atol 1e-15 | 17.5 min |
+| `drive` | drive the turbulence in AthenaK (hydro only, 1 rank) | 4.6 min |
+| `ic` | write the last snapshot as `shared_ic64.vtk` | seconds |
+| `si` | AthenaK chemistry run, semi-implicit | 28 s |
+| `bdf` | AthenaK chemistry run, Kokkos BDF (rtol 1e-2, atol 1e-15) | about 35-90 min |
+| `cvode` | Athena++ chemistry run, CVODE (rtol 1e-2, atol 1e-15) | 17.5 min |
 | `join` | merge Athena++'s per-MeshBlock VTK files | seconds |
-| `plot` | history from `.hst` files and dumps, slice comparison and movie | ~1 min |
+| `plot` | histories, slice comparison and movie | about 1 min |
 
-Times are for an Apple-silicon MacBook Pro.
+## Where things go
 
-The script expects the checkouts at `~/athenak` and `~/athena` and writes to
-`data/` in this repository (git ignores it). Override any path from the
-environment: `ATHENAK_ROOT`, `ATHENAPP_ROOT`, `AKBIN`, `APBIN`, `CHEMDATA`,
-`PYATHENA`, `NP`. See `machines/default.sh`; the other files there are the
-author's machines and are chosen only on those hosts.
+The script looks for the codes in `~/athenak` and `~/athena` and writes all
+output to `data/` in this repository, which git ignores. To use other places,
+set any of these before running: `ATHENAK_ROOT`, `ATHENAPP_ROOT`, `AKBIN`,
+`APBIN`, `CHEMDATA` (output), `PYATHENA`, `NP` (number of MPI ranks). The file
+`machines/default.sh` lists them; the other files in `machines/` are my own
+machines and are used only there.
 
-Every run writes `versions.txt`, the diff of each code's working tree and its
-untracked sources beside its output, so the code behind a result stays
-recoverable.
+Next to its output, each run saves `versions.txt` with the commit of each
+code, plus any uncommitted changes, so a result can always be traced back to
+the code that made it.
 
-Rerunning `drive` and `ic` with a different compiler and build (g++-15 serial
-against g++-16 with MPI, same machine) reproduced `shared_ic64.vtk` byte for
-byte. Another CPU architecture may differ in the last bits; that does not
-affect the comparison, since both codes read whichever file was made.
+## Notes
+
+- Driving the box again on another machine or compiler gives the same
+  `shared_ic64.vtk` (it was identical, bit for bit, with g++-15 serial and
+  g++-16 with MPI). Small differences on other CPUs would not matter, because
+  both codes read whichever file was made.
+- `log.md` records what was run, on which commits, and what was found.
+- `inputs/athinput.pdr1d` is a separate Athena++ 1D PDR setup (six-ray, CVODE)
+  and is not used by `run_turb64.sh`.
