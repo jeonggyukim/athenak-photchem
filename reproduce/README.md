@@ -1,31 +1,39 @@
 # Decaying turbulence with GOW17 chemistry: AthenaK and Athena++
 
-This test evolves the same turbulent gas with the GOW17 chemical network in
-AthenaK and in Athena++ and compares the two solutions cell by cell. AthenaK
-integrates the chemistry with its semi-implicit solver or with Kokkos BDF;
-Athena++ uses CVODE.
+We compare the chemical and thermal evolution of turbulent gas computed with
+the GOW17 network in AthenaK and in Athena++. In AthenaK the rate equations are
+integrated with the semi-implicit solver (or with Kokkos BDF); in Athena++
+they are integrated with CVODE. Agreement between the two, cell by cell, tests
+the AthenaK implementation of the network and of the solver against an
+established code.
 
-Because the two codes drive turbulence differently, the turbulence is generated
-once, in AthenaK, and both codes start from the same snapshot. AthenaK first
-drives a periodic box 32 pc on a side, resolved by 64^3 cells, at a mean
-hydrogen density n_H = 10 cm^-3, without chemistry. Its final state is written
-as `shared_ic64.vtk`. Each code then reads this file and evolves it for 2 Myr
-with chemistry and without driving. The radiation field is uniform, with
-G0 = 1e-6 in Draine units, and no shielding is computed. The inputs labeled
-`_n1_` repeat the test at n_H = 1 cm^-3 in an unattenuated field, G0 = 1.
+The two codes generate turbulence with different driving schemes, so a direct
+comparison requires a common initial state. We therefore drive turbulence
+once, in AthenaK, in a periodic box of side 32 pc resolved by 64^3 cells, at a
+mean hydrogen density n_H = 10 cm^-3 and an initial temperature of 10^4 K,
+without chemistry. The final snapshot of this run is the initial condition for
+both codes, which then follow its evolution for 2 Myr with chemistry included
+and the driving switched off. Both codes use the same hydrodynamic scheme (RK2
+time integration, PLM reconstruction, HLLC fluxes), update the chemistry once
+per hydrodynamic step, and adopt a constant H2 formation rate coefficient on
+grains, 3e-17 cm^3 s^-1. The gas is exposed to a uniform, weak radiation field,
+G0 = 1e-6 in Draine units, so that its chemistry is set by cosmic rays and
+collisions; shielding is not computed. A second set of runs, labeled `_n1_`,
+repeats the test at n_H = 1 cm^-3 in an unattenuated field, G0 = 1.
 
-## Codes
+## Reproducing the results
 
-AthenaK is taken from the `semi-implicit` branch of the fork below, which
-contains the problem generators `GOW17_turb` (driving) and `GOW17_read_vtk`
-(reading the snapshot):
+The AthenaK version used here is commit `2deb5e40` on the `semi-implicit`
+branch of `github.com/jeonggyukim/athenak`, which contains the problem
+generators for driving (`GOW17_turb`) and for reading the shared initial state
+(`GOW17_read_vtk`):
 
     git clone --recursive -b semi-implicit https://github.com/jeonggyukim/athenak.git ~/athenak
     cd ~/athenak && git checkout 2deb5e40
     cmake -B build -DCMAKE_BUILD_TYPE=Release -DAthena_ENABLE_MPI=ON && make -C build -j8
 
-Athena++ is taken at commit `823614c`, with the patch in `patches/` that lets
-`read_vtk.cpp` compile with MPI, and with CVODE from SUNDIALS 6.7.0:
+The Athena++ version is upstream commit `823614c`, compiled with CVODE
+(SUNDIALS 6.7.0) after a one-line fix that lets `read_vtk.cpp` build with MPI:
 
     git clone https://github.com/PrincetonUniversity/athena.git ~/athena
     cd ~/athena && git checkout 823614c
@@ -35,30 +43,18 @@ Athena++ is taken at commit `823614c`, with the patch in `patches/` that lets
     make -j8
     gcc -Wall -O2 -o vis/vtk/join_vtk++ vis/vtk/join_vtk++.c -lm
 
-The analysis requires Python 3 with numpy and matplotlib, and `ffmpeg` for the
-movie.
+The figures are made with Python 3 (numpy, matplotlib), and the movie with
+`ffmpeg`. From the top of this repository, the whole comparison is rerun with
 
-## Running the test
+    bash reproduce/run_turb64.sh
 
-The script `run_turb64.sh` performs each step in turn and is run from the top
-of this repository. A short run of every step (20 cycles each, about 2 min)
-checks the setup before the full test:
-
-    SMOKE=1 bash reproduce/run_turb64.sh    # check the setup
-    bash reproduce/run_turb64.sh            # full test
-    bash reproduce/run_turb64.sh si plot    # selected steps only
-
-| step | action | time on an 8-core laptop |
-| --- | --- | --- |
-| `drive` | drive the turbulence in AthenaK | 4.6 min |
-| `ic` | write `shared_ic64.vtk` | seconds |
-| `si`, `bdf` | AthenaK chemistry, semi-implicit or Kokkos BDF | 28 s; 35-90 min |
-| `cvode` | Athena++ chemistry with CVODE | 17.5 min |
-| `join`, `plot` | merge the Athena++ output; plot histories, slices and a movie | about 1 min |
-
-By default the script looks for the codes in `~/athenak` and `~/athena` and
-writes its output to `data/`, which git ignores. The variables `ATHENAK_ROOT`,
-`ATHENAPP_ROOT`, `CHEMDATA` (output directory), `NP` (number of MPI ranks) and
-`PYTHON` (interpreter, `python3` by default) override these choices; all are
-listed in `machines/default.sh`. Each run records the code versions it used in
-`versions.txt`, and `log.md` lists earlier runs and their results.
+which drives the turbulence (about 5 min on an 8-core laptop), writes the
+shared initial state, evolves it with the AthenaK semi-implicit solver (30 s),
+Kokkos BDF (35-90 min) and Athena++ CVODE (18 min), and plots the results.
+Individual parts can be run by name (`drive`, `ic`, `si`, `bdf`, `cvode`,
+`join`, `plot`), and `SMOKE=1` runs every part for 20 cycles as a quick check
+of the setup. The codes are expected in `~/athenak` and `~/athena` and the
+output is written to `data/`; other locations are set through the variables
+listed in `machines/default.sh`. The code versions behind each run are saved
+with its output, and `log.md` records the runs made so far and what they
+showed.
