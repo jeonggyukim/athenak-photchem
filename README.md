@@ -15,7 +15,7 @@ simulation output is not committed, the scripts rebuild it.
 
 | test | compares |
 | --- | --- |
-| [`tests/turb-box_athenak-vs-athenapp/`](tests/turb-box_athenak-vs-athenapp/) | decaying turbulence: AthenaK semi-implicit and BDF against Athena++ CVODE, cell by cell, from a shared initial state |
+| [`tests/turb-box-athenak-vs-athenapp/`](tests/turb-box-athenak-vs-athenapp/) | decaying turbulence: AthenaK semi-implicit and BDF against Athena++ CVODE, cell by cell, from a shared initial state |
 | [`tests/gow17-uniform_check-times/`](tests/gow17-uniform_check-times/) | GOW17 uniform box, four conditions: semi-implicit and default BDF against converged BDF at fixed times (prototype of the AthenaK regression test) |
 | [`tests/gow17-uniform_co-hcop-block/`](tests/gow17-uniform_co-hcop-block/) | CO/HCO+ solved together or separately, timescales and errors |
 | [`tests/gow17-uniform_refresh-rates/`](tests/gow17-uniform_refresh-rates/) | semi-implicit `refresh_rates` and `nsub_max`: accuracy and cost |

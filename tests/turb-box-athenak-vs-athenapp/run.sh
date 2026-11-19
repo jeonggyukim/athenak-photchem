@@ -2,9 +2,9 @@
 # Decaying turbulence with GOW17 chemistry: AthenaK (semi-implicit, Kokkos BDF)
 # against Athena++ CVODE, all started from one shared VTK snapshot.
 #
-#   bash tests/turb-box_athenak-vs-athenapp/run.sh                 every stage, in order
-#   bash tests/turb-box_athenak-vs-athenapp/run.sh si cvode join   only the named stages
-#   SMOKE=1 bash tests/turb-box_athenak-vs-athenapp/run.sh         every stage, 20 cycles each
+#   bash tests/turb-box-athenak-vs-athenapp/run.sh                 every stage, in order
+#   bash tests/turb-box-athenak-vs-athenapp/run.sh si cvode join   only the named stages
+#   SMOKE=1 bash tests/turb-box-athenak-vs-athenapp/run.sh         every stage, 20 cycles each
 #
 # Stages:
 #   drive  AthenaK driven turbulence, hydro only, t = 0 to 12 (1 rank, ~5 min at 64^3)
@@ -39,7 +39,7 @@ MB=${MB:-$(( NX / 2 < 32 ? NX / 2 : 32 ))}
 CASE=${CASE:-n10}
 
 if [ -n "$SLURM_JOB_ID" ]; then
-  HERE=$SLURM_SUBMIT_DIR/tests/turb-box_athenak-vs-athenapp
+  HERE=$SLURM_SUBMIT_DIR/tests/turb-box-athenak-vs-athenapp
 else
   HERE=$(cd "$(dirname "$0")" && pwd)
 fi

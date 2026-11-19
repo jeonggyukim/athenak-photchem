@@ -43,7 +43,7 @@ variable); `patches/athena-pp-read_vtk-mpi.diff` fixes this. The utility
 The figures are made with Python 3 (numpy, matplotlib), and the movie with
 `ffmpeg`. From the top of this repository, the whole comparison is rerun with
 
-    bash tests/turb-box_athenak-vs-athenapp/run.sh
+    bash tests/turb-box-athenak-vs-athenapp/run.sh
 
 which drives the turbulence (about 5 min on an 8-core laptop at 64^3), writes
 the shared initial state, evolves it with the AthenaK semi-implicit solver
