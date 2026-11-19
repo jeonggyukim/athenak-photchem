@@ -53,7 +53,8 @@ shared initial state, evolves it with the AthenaK semi-implicit solver (30 s),
 Kokkos BDF (35-90 min) and Athena++ CVODE (18 min), and plots the results.
 Individual parts can be run by name (`drive`, `ic`, `si`, `bdf`, `cvode`,
 `join`, `plot`), and `SMOKE=1` runs every part for 20 cycles as a quick check
-of the setup. The codes are expected in `~/athenak` and `~/athena` and the
+of the setup. The resolution is set by `NX` (default 64, i.e. 64^3 cells); for
+example, `NX=128` repeats the whole comparison at 128^3. The codes are expected in `~/athenak` and `~/athena` and the
 output is written to `data/`; other locations are set through the variables
 listed in `machines/default.sh`. The code versions behind each run are saved
 with its output, and `log.md` records the runs made so far and what they
