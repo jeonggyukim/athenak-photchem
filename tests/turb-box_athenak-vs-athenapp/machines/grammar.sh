@@ -9,7 +9,7 @@
 #
 # Submit from the repository root:
 #   sbatch -p normal -N 1 -n 8 --mem-per-cpu=2G -t 01:00:00 \
-#     -o /gpfs/jeonggyukim/athenak-chem/logs/turb64-%j.out reproduce/run_turb64.sh
+#     -o /gpfs/jeonggyukim/athenak-chem/logs/turb64-%j.out tests/turb-box_athenak-vs-athenapp/run_turb64.sh
 AK=${ATHENAK_ROOT:-$HOME/athenak-sweep}
 AP=${ATHENAPP_ROOT:-$HOME/athena-pp}
 AKBIN=${AKBIN:-$AK/build-cpu/src/athena}

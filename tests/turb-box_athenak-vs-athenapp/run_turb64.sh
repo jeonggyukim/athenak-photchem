@@ -2,9 +2,9 @@
 # Decaying 64^3 turbulence with GOW17 chemistry: AthenaK semi-implicit against
 # Athena++ CVODE, both started from one shared VTK snapshot.
 #
-#   bash reproduce/run_turb64.sh                 every stage, in order
-#   bash reproduce/run_turb64.sh si cvode join   only the named stages
-#   SMOKE=1 bash reproduce/run_turb64.sh         every stage, 20 cycles each
+#   bash tests/turb-box_athenak-vs-athenapp/run_turb64.sh   every stage, in order
+#   bash tests/turb-box_athenak-vs-athenapp/run_turb64.sh si cvode join   only the named stages
+#   SMOKE=1 bash tests/turb-box_athenak-vs-athenapp/run_turb64.sh   every stage, 20 cycles each
 #
 # Stages:
 #   drive  AthenaK driven turbulence, hydro only, t = 0 to 12 (1 rank, ~5 min)
@@ -24,14 +24,14 @@
 # CHEMDATA, PYTHON, NP).
 #
 # Under Slurm, submit from the repository root: Slurm runs a spooled copy of
-# this file, which cannot locate reproduce/ from its own path.
+# this file, which cannot locate its own directory from its own path.
 #
 # Output goes to $CHEMDATA. A stage refuses to overwrite a run directory that
 # already holds run.out; move it aside or point CHEMDATA elsewhere.
 set -e
 
 if [ -n "$SLURM_JOB_ID" ]; then
-  HERE=$SLURM_SUBMIT_DIR/reproduce
+  HERE=$SLURM_SUBMIT_DIR/tests/turb-box_athenak-vs-athenapp
 else
   HERE=$(cd "$(dirname "$0")" && pwd)
 fi
@@ -51,7 +51,7 @@ export ATHENAK_ROOT=$AK
 # The smoke test runs every stage for 20 cycles, into its own directory, with
 # figures beside the data rather than in the repository.
 OVR=()
-FIGDIR=${FIGDIR:-$HERE/../figures}
+FIGDIR=${FIGDIR:-$HERE/../../figures}
 if [ -n "$SMOKE" ]; then
   [ -n "$CHEMDATA" ] || DATA=$DATA-smoke
   OVR=(time/nlim=20)
@@ -174,16 +174,16 @@ fi
 
 if want plot; then
   mkdir -p "$FIGDIR"
-  "$PY" "$HERE/../scripts/plot_turb_hst.py" \
+  "$PY" "$HERE/../../scripts/plot_turb_hst.py" \
     --ak "$DATA/turb64_si_run/turb64_si.hydro.hst" \
     --ap "$DATA/turb64_cvode_run/turb64_cvode.hst" \
     --out "$FIGDIR/fig_turb_hst.png"
-  "$PY" "$HERE/../scripts/plot_turb_history_dumps.py" \
+  "$PY" "$HERE/../../scripts/plot_turb_history_dumps.py" \
     --ak-si-dir "$DATA/turb64_si_run" --ak-si-base turb64_si \
     --ak-bdf-dir "$DATA/turb64_bdf_run" --ak-bdf-base turb64_bdf \
     --ap-cvode-dir "$DATA/turb64_cvode_run" --ap-cvode-base turb64_cvode \
     --out "$FIGDIR/fig_turb_history_dumps.png"
-  "$PY" "$HERE/../scripts/plot_turb_evolution.py" \
+  "$PY" "$HERE/../../scripts/plot_turb_evolution.py" \
     --ak-dir "$DATA/turb64_si_run" --ak-base turb64_si \
     --ap-dir "$DATA/turb64_cvode_run/joined" --ap-base turb64_cvode \
     --outdir "$FIGDIR"

@@ -7,7 +7,6 @@ simulation output is not committed, the scripts rebuild it.
 
 | directory | holds |
 | --- | --- |
-| `reproduce/` | 64^3 decaying turbulence, AthenaK against Athena++ CVODE from a shared initial condition; see [`reproduce/README.md`](reproduce/README.md) |
 | `tests/<problem>/` | one folder per test problem: inputs, `run.sh`, plot script, figures in `fig_<name>/` |
 | `scripts/` | plotting and comparison scripts shared by the turbulence test and the GOW17 network figures |
 | `figures/`, `movie/` | figures and movies of the turbulence test and the GOW17 network |
@@ -16,7 +15,7 @@ simulation output is not committed, the scripts rebuild it.
 
 | test | compares |
 | --- | --- |
-| [`reproduce/`](reproduce/) | turbulent box: AthenaK semi-implicit and BDF against Athena++ CVODE, cell by cell |
+| [`tests/turb-box_athenak-vs-athenapp/`](tests/turb-box_athenak-vs-athenapp/) | decaying turbulence: AthenaK semi-implicit and BDF against Athena++ CVODE, cell by cell, from a shared initial state |
 | [`tests/gow17-uniform_check-times/`](tests/gow17-uniform_check-times/) | GOW17 uniform box, four conditions: semi-implicit and default BDF against converged BDF at fixed times (prototype of the AthenaK regression test) |
 | [`tests/gow17-uniform_co-hcop-block/`](tests/gow17-uniform_co-hcop-block/) | CO/HCO+ solved together or separately, timescales and errors |
 | [`tests/gow17-uniform_refresh-rates/`](tests/gow17-uniform_refresh-rates/) | semi-implicit `refresh_rates` and `nsub_max`: accuracy and cost |

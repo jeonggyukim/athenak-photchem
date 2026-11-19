@@ -5,6 +5,6 @@ AK=${ATHENAK_ROOT:-$HOME/athenak}
 AP=${ATHENAPP_ROOT:-$HOME/athena}
 AKBIN=${AKBIN:-$AK/build/src/athena}
 APBIN=${APBIN:-$AP/bin/athena}
-DATA=${CHEMDATA:-$HERE/../data}
+DATA=${CHEMDATA:-$HERE/../../data}
 PY=${PYTHON:-python3}
 NP=${NP:-8}

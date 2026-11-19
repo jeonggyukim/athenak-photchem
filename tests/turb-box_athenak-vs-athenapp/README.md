@@ -37,7 +37,7 @@ The Athena++ version is upstream commit `823614c`, compiled with CVODE
 
     git clone https://github.com/PrincetonUniversity/athena.git ~/athena
     cd ~/athena && git checkout 823614c
-    git apply <this repo>/reproduce/patches/athena-pp-read_vtk-mpi.diff
+    git apply <this repo>/tests/turb-box_athenak-vs-athenapp/patches/athena-pp-read_vtk-mpi.diff
     python configure.py --prob=read_vtk --chemistry=gow17 --chem_radiation=const \
         --chem_ode_solver=cvode --cvode_path=<sundials prefix> -mpi
     make -j8
@@ -46,7 +46,7 @@ The Athena++ version is upstream commit `823614c`, compiled with CVODE
 The figures are made with Python 3 (numpy, matplotlib), and the movie with
 `ffmpeg`. From the top of this repository, the whole comparison is rerun with
 
-    bash reproduce/run_turb64.sh
+    bash tests/turb-box_athenak-vs-athenapp/run_turb64.sh
 
 which drives the turbulence (about 5 min on an 8-core laptop), writes the
 shared initial state, evolves it with the AthenaK semi-implicit solver (30 s),

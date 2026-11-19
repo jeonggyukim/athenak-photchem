@@ -35,7 +35,7 @@ file byte for byte.
 
 ### Smoke test, all stages at 20 cycles
 
-    SMOKE=1 CHEMDATA=<scratch>/smoke bash reproduce/run_turb64.sh
+    SMOKE=1 CHEMDATA=<scratch>/smoke bash tests/turb-box_athenak-vs-athenapp/run_turb64.sh
 
 Passed, every stage exit 0. The cvode stage took 48.3 s wall on 8 ranks. The
 drive ran for only 20 cycles, so the shared field is nearly uniform
@@ -53,7 +53,7 @@ still the first run above (VL2, no history file). athenak built with
 | run | directory | wall (8 ranks) | note |
 | --- | --- | --- | --- |
 | si, T-dependent H2 grain rate | `turb64_si_kgrT_run` | 29.5 s | AthenaK default `is_kgrH2_const = false` |
-| si, constant H2 grain rate | `turb64_si_run` | 28.4 s | `bash reproduce/run_turb64.sh si` |
+| si, constant H2 grain rate | `turb64_si_run` | 28.4 s | `bash tests/turb-box_athenak-vs-athenapp/run_turb64.sh si` |
 | si, constant rate, tabulated | `turb64_si_table_run` | 19.6 s | `chemistry/GOW17_thermo_table=true chemistry/semi_implicit_table_deriv=true` on the command line |
 | Kokkos BDF, constant rate | `turb64_bdf_run` | stopped at t = 0.196 Myr after ~9 min | rtol 1e-2, atol 1e-15 |
 
