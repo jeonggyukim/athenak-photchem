@@ -11,6 +11,7 @@ CVODE. Simulation output is not committed; the scripts rebuild it.
 | `reproduce/patches/` | the one-file Athena++ fix the comparison needs |
 | `reproduce/log.md` | what was run, on which commits, and what it measured |
 | `scripts/` | plotting and comparison scripts |
+| `tests/<problem>/` | one folder per test problem: inputs, `run.sh`, plot script, figures in `fig_<name>/`; run output goes to `~/Documents/Athenak-chem-tests/` |
 
 ## The test: 64^3 decaying turbulence
 
