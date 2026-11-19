@@ -23,14 +23,16 @@ repeats the test at n_H = 1 cm^-3 in an unattenuated field, G0 = 1.
 
 ## Reproducing the results
 
-The AthenaK version used here is commit `2deb5e40` on the `semi-implicit`
-branch of `github.com/jeonggyukim/athenak`, which contains the problem
-generators for driving (`GOW17_turb`) and for reading the shared initial state
-(`GOW17_read_vtk`):
+AthenaK must be built with MPI and include the GOW17 chemistry module, the
+semi-implicit solver, and the problem generators for driving (`GOW17_turb`) and
+for reading the shared initial state (`GOW17_read_vtk`):
 
-    git clone --recursive -b semi-implicit https://github.com/jeonggyukim/athenak.git ~/athenak
-    cd ~/athenak && git checkout 2deb5e40
     cmake -B build -DCMAKE_BUILD_TYPE=Release -DAthena_ENABLE_MPI=ON && make -C build -j8
+
+Until these problem generators reach the main chemistry branch, they are
+available in `github.com/jeonggyukim/athenak` (branch `semi-implicit`). The
+results recorded in `log.md` were obtained with commit `2deb5e40` of that
+branch.
 
 The Athena++ version is upstream commit `823614c`, compiled with CVODE
 (SUNDIALS 6.7.0) after a one-line fix that lets `read_vtk.cpp` build with MPI:
