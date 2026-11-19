@@ -21,7 +21,7 @@
 # author's profile on the author's hosts (mac, grammar, syntax) and to default
 # everywhere else; CHEM_MACHINE names any other profile file. Every setting can
 # be overridden from the environment (ATHENAK_ROOT, ATHENAPP_ROOT, AKBIN, APBIN,
-# CHEMDATA, PYATHENA, NP).
+# CHEMDATA, PYTHON, NP).
 #
 # Under Slurm, submit from the repository root: Slurm runs a spooled copy of
 # this file, which cannot locate reproduce/ from its own path.

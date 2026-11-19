@@ -48,6 +48,6 @@ From the top of this repository:
 
 The script expects the codes in `~/athenak` and `~/athena` and writes to
 `data/` (ignored by git). Override with `ATHENAK_ROOT`, `ATHENAPP_ROOT`,
-`CHEMDATA` (output), `NP` (MPI ranks), or `PYATHENA` (the Python interpreter,
+`CHEMDATA` (output), `NP` (MPI ranks), or `PYTHON` (the Python interpreter,
 `python3` by default); see `machines/default.sh`. Each run saves the code
 versions it used in `versions.txt`. `log.md` records past runs and results.

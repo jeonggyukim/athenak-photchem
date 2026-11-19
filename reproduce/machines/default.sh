@@ -6,5 +6,5 @@ AP=${ATHENAPP_ROOT:-$HOME/athena}
 AKBIN=${AKBIN:-$AK/build/src/athena}
 APBIN=${APBIN:-$AP/bin/athena}
 DATA=${CHEMDATA:-$HERE/../data}
-PY=${PYATHENA:-python3}
+PY=${PYTHON:-python3}
 NP=${NP:-8}

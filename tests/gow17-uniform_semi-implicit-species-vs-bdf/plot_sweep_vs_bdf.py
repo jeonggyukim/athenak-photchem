@@ -26,8 +26,8 @@ reports ~n=10 instead of the full-run mean. Substep count is a per-cell physics
 property and therefore identical at both meshes, so the full-run cost is taken as
 (mean substeps) x (cost per substep), the latter derived from the fixed-n arms.
 
-Run with the pyathena interpreter:
-    ~/miniconda3/envs/pyathena/bin/python plot_sweep_vs_bdf.py \
+Run with Python 3 (numpy, matplotlib):
+    python plot_sweep_vs_bdf.py \
         --data-dir /gpfs/jeonggyukim/athenak-chem/runs/acc4 \
         --cost-dir /gpfs/jeonggyukim/athenak/runs/perf64 \
         --gpu a100 --cost-gpu h200/syn104

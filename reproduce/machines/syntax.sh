@@ -15,7 +15,7 @@ AP=${ATHENAPP_ROOT:-$HOME/athena-pp}
 AKBIN=${AKBIN:-$AK/build-gpu-${KOKKOS_ARCH:-HOPPER90}/src/athena}
 APBIN=${APBIN:-$AP/bin/athena_mpi}
 DATA=${CHEMDATA:-/gpfs/jeonggyukim/athenak-chem/runs/turb64}
-PY=${PYATHENA:-$HOME/miniconda3/envs/pyathena/bin/python}
+PY=${PYTHON:-$HOME/miniconda3/envs/pyathena/bin/python}
 NP=${NP:-1}
 set +u
 if ! type module >/dev/null 2>&1; then

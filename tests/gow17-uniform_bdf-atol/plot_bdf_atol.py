@@ -34,7 +34,7 @@ reports ~n=10 instead of the full-run mean. Substep count is a per-cell physics
 property and therefore identical at both meshes, so the full-run cost is taken as
 (mean substeps) x (cost per substep), the latter derived from the fixed-n arms.
 
-Run with the pyathena interpreter:
+Run with Python 3 (numpy, matplotlib):
     python plot_semi_implicit_vs_bdf.py \
         --data-dir ~/Documents/Athenak-chem-tests/gow17-semi-implicit-vs-bdf \
         --gpu "Mac CPU" --out gow17_semi_implicit_vs_bdf.png

@@ -15,6 +15,6 @@ AP=${ATHENAPP_ROOT:-$HOME/athena-pp}
 AKBIN=${AKBIN:-$AK/build-cpu/src/athena}
 APBIN=${APBIN:-$AP/bin/athena_mpi}
 DATA=${CHEMDATA:-/gpfs/jeonggyukim/athenak-chem/runs/turb64}
-PY=${PYATHENA:-$HOME/miniconda3/envs/pyathena/bin/python}
+PY=${PYTHON:-$HOME/miniconda3/envs/pyathena/bin/python}
 NP=${NP:-8}
 source "${AI_SCRIPTS:-$HOME/ai-notes/scripts}/grammar_modules.sh"
