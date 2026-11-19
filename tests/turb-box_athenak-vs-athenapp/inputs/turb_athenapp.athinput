@@ -1,12 +1,12 @@
 # Athena++, GOW17 with CVODE, on the shared field; the counterpart of
-# turb64_si.athinput. The Riemann solver is fixed at configure time, so the
-# binary must be built with --flux=hllc; run_turb64.sh checks this.
+# turb_athenak.athinput. The Riemann solver is fixed at configure time, so the
+# binary must be built with --flux=hllc; run.sh checks this.
 
 <comment>
 problem   = GOW17 + CVODE on the shared AthenaK field
 
 <job>
-problem_id = turb64_cvode
+problem_id = turb_cvode
 
 <time>
 cfl_number = 0.3

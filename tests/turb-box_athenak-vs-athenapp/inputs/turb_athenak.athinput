@@ -1,18 +1,19 @@
-# AthenaK, GOW17 with the semi-implicit solver (Gauss-Seidel + CO/HCO+ block), on the
-# shared field at mean n_H = 1 cm^-3 in an unshielded FUV field G0 = 1: neutral gas.
-# shared_ic64_n1.vtk is shared_ic64.vtk with density and pressure x 0.1
-# (scale_vtk_density.py), so the floors are x 0.1 too.
+# AthenaK, GOW17 on the shared field, with the semi-implicit solver or, with
+# chemistry/ode_solver=kokkos_BDF, Kokkos BDF at the CVODE tolerances of
+# turb_athenapp.athinput (rtol = 1e-2, atol = 1e-15 on every variable, including
+# the internal energy, as Athena++ applies abstol when abstol_E is unset).
 #
-# Decaying turbulence: the velocity field is whatever shared_ic64_n1.vtk holds, with
-# no forcing after t = 0. The hydro scheme (rk2, plm, hllc) matches
-# turb64_cvode.athinput, so the remaining differences are the ODE solver and the
-# two codes' hydro implementations.
+# Decaying turbulence: the velocity field is whatever the shared VTK file holds,
+# with no forcing after t = 0. The hydro scheme (rk2, plm, hllc) matches
+# turb_athenapp.athinput, so the remaining differences are the ODE solver and the
+# two codes' hydro implementations. run.sh sets the resolution, the case and the
+# solver on the command line.
 
 <comment>
 problem   = GOW17 chemistry on a shared turbulent field
 
 <job>
-basename  = turb64_n1_si_gs
+basename  = turb_si
 
 <mesh>
 nghost    = 2
@@ -53,8 +54,8 @@ reconstruct     = plm
 rsolver         = hllc
 gamma           = 1.666666666666667
 nscalars        = 0
-dfloor          = 1.0e-2
-pfloor          = 1.0e-1
+dfloor          = 1.0e-1
+pfloor          = 1.0e+0
 
 <units>
 # ISM units, identical to Athena++'s default unit_system = ism:
@@ -68,7 +69,7 @@ mu          = 1.27
 network                    = GOW17
 ode_solver                 = semi_implicit
 report_substeps            = true
-radiation_G0               = 1.0
+radiation_G0               = 1.0e-6
 radiation_CR               = 2.0e-16
 GOW17_Z_d                  = 1.0
 GOW17_Z_g                  = 1.0
@@ -79,13 +80,13 @@ GOW17_xSi                  = 1.7e-6
 is_kgrH2_const             = true
 GOW17_thermo_table         = false
 semi_implicit_cfl          = 0.1
-semi_implicit_gauss_seidel = true
-semi_implicit_co_block     = true
 semi_implicit_table_deriv  = false
+kokkos_BDF_rtol            = 1.0e-2
+kokkos_BDF_atol            = 1.0e-15
 
 <problem>
 pgen_name   = GOW17_read_vtk
-vtkfile     = shared_ic64_n1.vtk
+vtkfile     = shared_ic64.vtk
 r_init      = 1.0e-6
 
 <output1>
