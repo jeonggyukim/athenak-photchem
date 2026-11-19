@@ -90,8 +90,8 @@ def main():
     p.add_argument("--out", default=os.path.join(HERE, "fig_check-times",
                                                   "gow17_check_times.png"))
     args = p.parse_args()
-    plt.rcParams.update({"font.size": 11})
-    fig, ax = plt.subplots(len(CASES), 4, figsize=(19, 4.1 * len(CASES)),
+    plt.rcParams.update({"font.size": 16})
+    fig, ax = plt.subplots(len(CASES), 4, figsize=(22, 5.0 * len(CASES)),
                            constrained_layout=True)
     for i, (name, title, times, dref, dsi) in enumerate(CASES):
         (tr, r), (ts, s) = series(dref), series(dsi)
@@ -105,16 +105,16 @@ def main():
                 a.loglog(tr[mr], r[k][mr], color=c, lw=2, label=tex(k))
                 a.loglog(ts[ms], s[k][ms], color=c, lw=1.2, ls="--")
             a.set_ylim(bottom=1e-15)
-            a.legend(fontsize=8, ncol=3 if j else 1, loc="lower right")
+            a.legend(fontsize=11, ncol=3 if j else 1, loc="lower right")
         a = ax[i, 2]
         a.loglog(tr[mr], r["T"][mr], "k", lw=2, label="converged BDF")
         a.loglog(ts[ms], s["T"][ms], color="#D55E00", lw=1.2, ls="--", label="semi_implicit")
-        a.legend(fontsize=8)
+        a.legend(fontsize=11)
         for j in range(3):
             for tc in times:
                 ax[i, j].axvline(float(tc), color="0.75", lw=0.8, zorder=0)
             ax[i, j].set_xlabel("t [Myr]")
-        ax[i, 0].set_ylabel(f"{name}: {title}\nabundance per H", fontsize=10)
+        ax[i, 0].set_ylabel(f"{name}: {title}\nabundance per H", fontsize=14)
         ax[i, 1].set_ylabel("abundance per H")
         ax[i, 2].set_ylabel("T [K]")
         a = ax[i, 3]
@@ -132,14 +132,14 @@ def main():
         a.set_ylim(5e-7, 2)
         a.set_xlabel("check time [Myr]")
         a.set_ylabel("error vs converged BDF")
-        a.legend(fontsize=8)
+        a.legend(fontsize=11)
     for j, t in enumerate(["(a) H$_2$, CO, H$^+$", "(b) remaining species",
                            "(c) temperature", "(d) error at check times"]):
         ax[0, j].set_title(t)
     fig.suptitle("GOW17 uniform, 4$^3$: converged Kokkos BDF (rtol = 10$^{-7}$, "
-                 "atol = 10$^{-16}$; solid) vs semi_implicit at its defaults (dashed); "
+                 "atol = 10$^{-16}$; solid) vs semi_implicit at its defaults (dashed)\n"
                  "default BDF in (d): rtol = 10$^{-3}$, atol = 10$^{-6}$; grey lines: "
-                 "check times", fontsize=13)
+                 "check times", fontsize=17)
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     fig.savefig(args.out, dpi=130)
     print("wrote", args.out)
