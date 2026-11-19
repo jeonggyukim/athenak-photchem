@@ -68,7 +68,6 @@ mu          = 1.27
 <chemistry>
 network                    = GOW17
 ode_solver                 = semi_implicit
-report_substeps            = true
 radiation_G0               = 1.0e-6
 radiation_CR               = 2.0e-16
 GOW17_Z_d                  = 1.0
@@ -78,9 +77,7 @@ GOW17_xC                   = 1.6e-4
 GOW17_xO                   = 3.2e-4
 GOW17_xSi                  = 1.7e-6
 is_kgrH2_const             = true
-GOW17_thermo_table         = false
-semi_implicit_cfl          = 0.1
-semi_implicit_table_deriv  = false
+semi_implicit_dt_sub_frac  = 0.1
 kokkos_BDF_rtol            = 1.0e-2
 kokkos_BDF_atol            = 1.0e-15
 

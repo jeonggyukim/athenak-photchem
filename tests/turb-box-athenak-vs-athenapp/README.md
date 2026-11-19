@@ -26,9 +26,9 @@ atol = 1e-15), so that their runs differ only in the code.
 
 AthenaK must be built with MPI and include the GOW17 chemistry module, the
 semi-implicit solver, and the problem generators for driving (`GOW17_turb`) and
-for reading the shared initial state (`GOW17_read_vtk`). Until these problem
-generators reach the main chemistry branch, they are available in
-`github.com/jeonggyukim/athenak` (branch `semi-implicit`).
+for reading the shared initial state (`GOW17_read_vtk`). Until the solver and
+these problem generators reach the main chemistry branch, all of them are in
+branch `gow17-turb-pgens` of `github.com/jeonggyukim/athenak`.
 
 Athena++ must be configured with the `read_vtk` problem generator, GOW17
 chemistry, constant radiation, CVODE and MPI, with HLLC fluxes:
